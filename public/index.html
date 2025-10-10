@@ -1,0 +1,716 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Billing Dashboard — JBS KNIT WEAR</title>
+<style>
+  :root{--bg:#f5f7fb;--card:#fff;--accent:#0b79ff;--muted:#6b7280}
+  body{margin:0;font-family:Inter, "Segoe UI", Arial, sans-serif;background:var(--bg);color:#111}
+  .app{display:flex;min-height:100vh}
+  /* Sidebar */
+  .sidebar{width:260px;background:#fff;border-right:1px solid #e6e9ef;padding:20px;box-sizing:border-box}
+  .brand{font-weight:800;font-size:18px;margin-bottom:18px}
+  .nav{display:flex;flex-direction:column;gap:6px}
+  .nav button{background:transparent;border:0;text-align:left;padding:10px 12px;border-radius:8px;cursor:pointer;font-size:15px;color:#111;display:block}
+  .nav button.active{background:linear-gradient(90deg, rgba(11,121,255,0.08), rgba(11,121,255,0.02)); border:1px solid rgba(11,121,255,0.06)}
+  .nav .small{font-size:12px;color:var(--muted);margin-top:6px}
+  /* Main */
+  .main{flex:1;padding:22px;box-sizing:border-box}
+  .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+  h1{margin:0;font-size:28px}
+  .content{display:block}
+  .card{background:var(--card);padding:16px;border-radius:10px;box-shadow:0 6px 18px rgba(12,17,25,0.04);margin-bottom:16px}
+  input,select,textarea{padding:8px;border:1px solid #e6e6e6;border-radius:6px;font-size:14px}
+  button.btn{background:var(--accent);color:#fff;border:0;padding:8px 12px;border-radius:8px;cursor:pointer}
+  button.ghost{background:transparent;border:1px solid #ddd;color:#111;padding:6px 10px;border-radius:6px}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:10px;border-bottom:1px solid #f0f0f0;text-align:left}
+  th{background:#fafafa}
+  .right{text-align:right}
+  .muted{color:var(--muted)}
+  .flex{display:flex;gap:12px;align-items:center}
+  .grow{flex:1}
+  .small{font-size:13px}
+  .actions{display:flex;gap:8px}
+  .badge{background:#eef6ff;color:var(--accent);padding:6px 10px;border-radius:8px;font-weight:600}
+  /* responsive */
+  @media (max-width:900px){ .sidebar{display:none} .main{padding:12px} }
+  /* print */
+  @media print {
+    .no-print { display:none; }
+    body { background: #fff; }
+  }
+</style>
+</head>
+<body>
+  <div class="app">
+    <div class="sidebar">
+      <div class="brand" id="brandName">JBS KNIT WEAR — Billing</div>
+      <div class="nav" role="navigation">
+        <button data-view="dashboard" class="active">Dashboard <div class="muted small">Quick totals & recent</div></button>
+        <button data-view="transactions">Transactions <div class="muted small">Income & expense quick add</div></button>
+        <button data-view="create-invoice">Create Invoice <div class="muted small">Add products & save</div></button>
+        <button data-view="invoices">Invoices <div class="muted small">Saved invoices list</div></button>
+        <button data-view="printable">Printable template <div class="muted small">View / print invoice</div></button>
+      </div>
+      <div style="margin-top:14px" class="muted small">Tip: Use Save then Print from the invoice view.</div>
+    </div>
+
+    <div class="main">
+      <div class="topbar">
+        <div style="display:flex;gap:12px;align-items:center">
+          <h1>Billing Dashboard</h1>
+          <div style="display:flex;flex-direction:column;align-items:flex-end">
+            <div class="muted small">Opening balance (today)</div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <input id="openingInput" type="number" step="0.01" placeholder="0.00" style="width:120px;padding:6px" />
+              <button id="saveOpeningBtn" class="btn">Set Opening</button>
+              <button id="clearOpeningBtn" class="ghost">Clear</button>
+            </div>
+            <div class="muted small" style="margin-top:6px">Current: <strong id="openingDisplay">—</strong></div>
+          </div>
+        </div>
+
+        <div class="flex no-print">
+          <div class="badge" id="profitBadge">Profit: ₹0.00</div>
+          <button id="printDayReport" class="btn" style="margin-left:12px;background:#ff7a00">Print Day Report</button>
+          <button id="resetDataBtn" class="ghost" style="margin-left:12px;background:#fff;color:#b00;border:1px solid #f5c6c6">Reset Data</button>
+        </div>
+      </div>
+
+      <div class="content">
+
+        <!-- Dashboard -->
+        <div class="card view" id="view-dashboard">
+          <h2>Summary</h2>
+          <div style="display:flex;gap:12px;margin-top:12px">
+            <div class="card" style="flex:1">
+              <div class="muted">Total Income</div>
+              <div style="font-size:20px;font-weight:700" id="totalIncome">₹0.00</div>
+            </div>
+            <div class="card" style="flex:1">
+              <div class="muted">Total Expense</div>
+              <div style="font-size:20px;font-weight:700" id="totalExpense">₹0.00</div>
+            </div>
+            <div class="card" style="flex:1">
+              <div class="muted">Profit</div>
+              <div style="font-size:20px;font-weight:700;color:var(--accent)" id="profit">₹0.00</div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top:12px">
+            <h3>Recent transactions</h3>
+            <table id="recentTxTable">
+              <thead><tr><th>Date</th><th>Type</th><th>Category</th><th class="right">Amount</th><th>Reference</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Transactions -->
+        <div class="card view" id="view-transactions" style="display:none">
+          <h2>Add transaction</h2>
+          <form id="txForm" style="margin-top:10px">
+            <div style="display:flex;gap:12px">
+              <select id="txType" style="width:160px">
+                <option value="income">Income</option>
+                <option value="expense">Expense</option>
+              </select>
+              <input id="txCategory" placeholder="Category (sales, rent...)" class="grow" />
+              <input id="txAmount" placeholder="Amount" type="number" step="0.01" style="width:140px" />
+              <input id="txDate" type="date" style="width:160px" />
+            </div>
+            <div style="display:flex;gap:8px;margin-top:10px;align-items:center">
+              <input id="txReference" placeholder="Reference (invoice no)" style="width:320px" />
+              <input id="txNotes" placeholder="Notes" class="grow" />
+              <button class="btn" type="button" id="txSaveBtn">Save</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Create Invoice -->
+        <div class="card view" id="view-create-invoice" style="display:none">
+          <h2>Create Invoice</h2>
+          <div style="display:flex;gap:12px;margin-top:12px">
+            <input id="invoiceNo" placeholder="Invoice no (auto)" style="width:180px" />
+            <input id="invoiceDate" type="date" style="width:180px" />
+            <input id="customerName" placeholder="Customer name" class="grow" />
+          </div>
+
+          <table style="margin-top:12px">
+            <thead>
+              <tr>
+                <th style="width:4%">S.No</th>
+                <th>Particulars</th>
+                <th style="width:12%">Qty</th>
+                <th style="width:12%">Rate</th>
+                <th style="width:12%">Discount %</th>
+                <th style="width:16%">Amount</th>
+                <th style="width:6%"></th>
+              </tr>
+            </thead>
+            <tbody id="invoiceItems"></tbody>
+          </table>
+
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px">
+            <div>
+              <button class="btn" id="addItemBtn">+ Add product</button>
+              <button class="ghost" id="clearItemsBtn">Clear all</button>
+              <button class="ghost" id="recalcBtn">Recalculate amounts</button>
+            </div>
+            <div style="width:320px">
+              <div style="display:flex;justify-content:space-between"><div class="muted">Subtotal</div><div id="invSubtotal" class="right">0.00</div></div>
+              <div style="display:flex;justify-content:space-between;margin-top:6px">
+                <div class="muted">Tax % <input id="invTaxPercent" type="number" value="0" min="0" max="100" style="width:60px;margin-left:8px"/></div>
+                <div id="invTaxAmount" class="right">0.00</div>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-weight:700;margin-top:8px"><div>Total</div><div id="invGrand" class="right">0.00</div></div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:8px;margin-top:12px;align-items:center">
+            <button class="btn" id="saveInvoiceBtn">Save Invoice</button>
+            <button class="btn" id="openPrintableBtn" style="background:#2a9d8f">Open Printable</button>
+            <div id="invoiceSavedMsg" class="muted"></div>
+          </div>
+        </div>
+
+        <!-- Invoices list -->
+        <div class="card view" id="view-invoices" style="display:none">
+          <h2>Saved Invoices</h2>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+            <div>
+              <input id="searchInv" placeholder="Search invoice no or customer" style="padding:8px;border:1px solid #ddd;border-radius:6px;width:320px"/>
+              <button id="refreshInv" class="ghost">Refresh</button>
+            </div>
+            <div class="muted">Total: <span id="invCount">0</span></div>
+          </div>
+
+          <table id="invoicesTable" style="margin-top:12px">
+            <thead><tr><th>ID</th><th>Invoice No</th><th>Date</th><th>Customer</th><th class="right">Total</th><th>Actions</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <!-- Printable quick view (uses invoice-template page) -->
+        <div class="card view" id="view-printable" style="display:none">
+          <h2>Printable Template</h2>
+          <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+            <input id="printInvoiceId" placeholder="Enter invoice id" style="width:160px" />
+            <button class="btn" id="openPrintableDirect">Open Printable</button>
+          </div>
+          <div class="muted" style="margin-top:8px">Printable opens in a new tab using the printable template.</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+<script>
+/* ---------- SETTINGS / COMPANY ---------- */
+const COMPANY = {
+  name: 'JBS KNIT WEAR',
+  addressLine1: '3(2)/2B, Nesavalar Colony 2nd Street, P.N.Road, Tirupur - 641 602.',
+  gstin: '33CKAPJ7513F1ZK'
+};
+
+/* ---------- Simple SPA nav ---------- */
+const navButtons = document.querySelectorAll('.nav button[data-view]');
+const views = document.querySelectorAll('.view');
+
+function showView(name) {
+  views.forEach(v => v.style.display = v.id === 'view-' + name ? 'block' : 'none');
+  navButtons.forEach(b => b.classList.toggle('active', b.dataset.view === name));
+}
+navButtons.forEach(b => b.addEventListener('click', () => showView(b.dataset.view)));
+showView('dashboard'); // default
+document.getElementById('brandName').textContent = COMPANY.name + ' — Billing';
+
+/* ---------- Utilities & API ---------- */
+const API = '/api';
+async function apiGet(path){ const r=await fetch(API+path); return r.json(); }
+async function apiPost(path,p){ const r=await fetch(API+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)}); return r.json(); }
+
+/* ---------- Opening balance (localStorage) ---------- */
+const OPENING_KEY = 'billing_opening_balance';
+const openingInput = document.getElementById('openingInput');
+const openingDisplay = document.getElementById('openingDisplay');
+const saveOpeningBtn = document.getElementById('saveOpeningBtn');
+const clearOpeningBtn = document.getElementById('clearOpeningBtn');
+
+function loadOpening() {
+  const raw = localStorage.getItem(OPENING_KEY);
+  if (!raw) { openingDisplay.textContent = '—'; return null; }
+  const val = parseFloat(raw);
+  if (isNaN(val)) { openingDisplay.textContent = '—'; return null; }
+  openingDisplay.textContent = '₹' + val.toFixed(2);
+  return val;
+}
+function setOpening(value) {
+  if (value === null) { localStorage.removeItem(OPENING_KEY); openingDisplay.textContent = '—'; return; }
+  localStorage.setItem(OPENING_KEY, String(Number(value).toFixed(2)));
+  openingDisplay.textContent = '₹' + Number(value).toFixed(2);
+}
+saveOpeningBtn.addEventListener('click', () => {
+  const v = parseFloat(openingInput.value);
+  if (isNaN(v)) return alert('Enter a valid number for opening balance');
+  setOpening(v);
+  alert('Opening balance for today set to ₹' + v.toFixed(2));
+  loadDashboard();
+});
+clearOpeningBtn.addEventListener('click', () => {
+  if (!confirm('Clear saved opening balance for today?')) return;
+  setOpening(null);
+  alert('Opening balance cleared');
+  loadDashboard();
+});
+loadOpening();
+
+/* ---------- Dashboard: load summary & recent tx ---------- */
+async function loadDashboard() {
+  try {
+    const sum = await fetch(API + '/reports/summary').then(r=>r.json());
+    const income = sum.income || 0, expense = sum.expense || 0;
+    document.getElementById('totalIncome').textContent = '₹' + Number(income).toFixed(2);
+    document.getElementById('totalExpense').textContent = '₹' + Number(expense).toFixed(2);
+    const profitVal = income - expense;
+    document.getElementById('profit').textContent = '₹' + profitVal.toFixed(2);
+    document.getElementById('profitBadge').textContent = 'Profit: ₹' + profitVal.toFixed(2);
+  } catch(e){ console.warn('summary load failed', e); }
+
+  try {
+    const tx = await fetch(API + '/transactions').then(r=>r.json());
+    const tbody = document.querySelector('#recentTxTable tbody');
+    tbody.innerHTML = '';
+    (tx || []).slice(0,8).forEach(t=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${t.date}</td><td>${t.type}</td><td>${t.category||''}</td><td class="right">${Number(t.amount||0).toFixed(2)}</td><td>${t.reference||''}</td>`;
+      tbody.appendChild(tr);
+    });
+  } catch(e){ console.warn('recent tx failed', e); }
+}
+
+/* ---------- Transactions view logic ---------- */
+document.getElementById('txSaveBtn').addEventListener('click', async () => {
+  const type = document.getElementById('txType').value;
+  const category = document.getElementById('txCategory').value;
+  const amount = parseFloat(document.getElementById('txAmount').value) || 0;
+  const date = document.getElementById('txDate').value || new Date().toISOString().slice(0,10);
+  const reference = document.getElementById('txReference').value;
+  const notes = document.getElementById('txNotes').value;
+  if (!amount) { alert('Enter amount'); return; }
+  const res = await apiPost('/transactions',{type,category,amount,date,reference,notes});
+  if (res && res.id) { alert('Saved'); document.getElementById('txForm').reset(); loadDashboard(); } else alert('Save failed: ' + JSON.stringify(res));
+});
+
+/* ---------- Invoice create logic with discount + editable amount ---------- */
+const invoiceItemsBody = document.getElementById('invoiceItems');
+
+function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function createInvoiceRow(idx, data={}) {
+  const tr = document.createElement('tr');
+  tr.dataset.idx = idx;
+  if (data.override) tr.dataset.override = 'true';
+  tr.innerHTML = `
+    <td>${idx+1}</td>
+    <td><input class="inv-desc" placeholder="Product description" value="${escapeHtml(data.description||'')}" /></td>
+    <td><input class="inv-qty" type="number" min="0" step="1" value="${data.qty||''}" style="width:100%"/></td>
+    <td><input class="inv-rate" type="number" min="0" step="0.01" value="${data.unit_price||''}" style="width:100%"/></td>
+    <td><input class="inv-discount" type="number" min="0" max="100" step="0.01" value="${data.discount||0}" style="width:100%"/></td>
+    <td class="right"><input class="inv-amount" value="${data.line_total?Number(data.line_total).toFixed(2):''}" style="width:100%"/></td>
+    <td><button class="ghost removeItemBtn">x</button></td>
+  `;
+
+  const qtyEl = tr.querySelector('.inv-qty');
+  const rateEl = tr.querySelector('.inv-rate');
+  const discEl = tr.querySelector('.inv-discount');
+  const amtEl = tr.querySelector('.inv-amount');
+
+  [qtyEl, rateEl, discEl].forEach(el => el.addEventListener('input', () => {
+    if (tr.dataset.override === 'true') return;
+    const q = parseFloat(qtyEl.value) || 0;
+    const r = parseFloat(rateEl.value) || 0;
+    const d = parseFloat(discEl.value) || 0;
+    const computed = q * r * (1 - (d/100));
+    amtEl.value = computed ? computed.toFixed(2) : '';
+    calculateInvoiceTotals();
+  }));
+
+  amtEl.addEventListener('input', () => {
+    if (amtEl.value.trim() === '') {
+      delete tr.dataset.override;
+    } else {
+      tr.dataset.override = 'true';
+    }
+    calculateInvoiceTotals();
+  });
+
+  tr.querySelector('.removeItemBtn').addEventListener('click', () => {
+    tr.remove();
+    reindexInvoiceRows();
+    calculateInvoiceTotals();
+  });
+
+  return tr;
+}
+
+function reindexInvoiceRows(){ const rows = invoiceItemsBody.querySelectorAll('tr'); rows.forEach((r,i)=> r.querySelector('td').textContent = i+1); }
+function addInvoiceRow(data){ invoiceItemsBody.appendChild(createInvoiceRow(invoiceItemsBody.querySelectorAll('tr').length, data)); }
+function clearInvoiceRows(){ invoiceItemsBody.innerHTML=''; for(let i=0;i<6;i++) addInvoiceRow(); calculateInvoiceTotals(); }
+
+function calculateInvoiceTotals(){
+  const rows = invoiceItemsBody.querySelectorAll('tr');
+  let subtotal = 0;
+  rows.forEach(r=>{
+    const qty = parseFloat(r.querySelector('.inv-qty').value) || 0;
+    const rate = parseFloat(r.querySelector('.inv-rate').value) || 0;
+    const disc = parseFloat(r.querySelector('.inv-discount').value) || 0;
+    const amtInput = r.querySelector('.inv-amount');
+    let amt = 0;
+    if (r.dataset.override === 'true') {
+      amt = parseFloat(amtInput.value) || 0;
+    } else {
+      amt = qty * rate * (1 - (disc/100));
+      amtInput.value = amt ? amt.toFixed(2) : '';
+    }
+    subtotal += amt;
+  });
+  const taxPerc = parseFloat(document.getElementById('invTaxPercent').value) || 0;
+  const taxAmt = subtotal * (taxPerc/100);
+  const grand = subtotal + taxAmt;
+  document.getElementById('invSubtotal').textContent = subtotal.toFixed(2);
+  document.getElementById('invTaxAmount').textContent = taxAmt.toFixed(2);
+  document.getElementById('invGrand').textContent = grand.toFixed(2);
+}
+
+/* invoice add/remove buttons */
+document.getElementById('addItemBtn').addEventListener('click', ()=>{ addInvoiceRow(); });
+document.getElementById('clearItemsBtn').addEventListener('click', ()=>{ if(confirm('Clear all items?')) clearInvoiceRows(); });
+document.getElementById('invTaxPercent').addEventListener('input', calculateInvoiceTotals);
+document.getElementById('recalcBtn').addEventListener('click', ()=> {
+  document.querySelectorAll('#invoiceItems tr').forEach(tr => { delete tr.dataset.override; });
+  calculateInvoiceTotals();
+});
+
+/* Save invoice */
+document.getElementById('saveInvoiceBtn').addEventListener('click', async ()=>{
+  const items = [];
+  const rows = invoiceItemsBody.querySelectorAll('tr');
+  rows.forEach(r=>{
+    const desc = r.querySelector('.inv-desc').value.trim();
+    const qty = parseFloat(r.querySelector('.inv-qty').value) || 0;
+    const rate = parseFloat(r.querySelector('.inv-rate').value) || 0;
+    const discount = parseFloat(r.querySelector('.inv-discount').value) || 0;
+    const amount = parseFloat(r.querySelector('.inv-amount').value) || 0;
+    if (desc || qty || rate || amount) {
+      items.push({
+        description: desc || 'Item',
+        qty: Math.round(qty),
+        unit_price: parseFloat(rate.toFixed(2)),
+        discount: parseFloat(discount.toFixed(2)),
+        line_total: parseFloat(amount.toFixed(2))
+      });
+    }
+  });
+  if (!items.length){ alert('Add at least one product'); return; }
+  const payload = {
+    invoice_no: document.getElementById('invoiceNo').value || undefined,
+    date: document.getElementById('invoiceDate').value || new Date().toISOString().slice(0,10),
+    customer_name: document.getElementById('customerName').value || '',
+    subtotal: parseFloat(document.getElementById('invSubtotal').textContent) || 0,
+    tax: parseFloat(document.getElementById('invTaxAmount').textContent) || 0,
+    total: parseFloat(document.getElementById('invGrand').textContent) || 0,
+    notes: '',
+    items
+  };
+  const res = await apiPost('/invoices', payload);
+  if (res && (res.id || (res.invoice && res.invoice.id))) {
+    const id = res.id || (res.invoice && res.invoice.id);
+    document.getElementById('invoiceSavedMsg').innerHTML = `Saved invoice id ${id}. <a href="/invoice-template.html?id=${id}" target="_blank">Open printable</a>`;
+    if (res.invoice_no) document.getElementById('invoiceNo').value = res.invoice_no;
+    loadInvoicesList();
+    loadDashboard();
+  } else alert('Save failed: ' + JSON.stringify(res));
+});
+
+/* Open printable (from Create Invoice panel) */
+document.getElementById('openPrintableBtn').addEventListener('click', ()=>{
+  const msg = document.getElementById('invoiceSavedMsg').textContent || '';
+  const m = msg.match(/Saved invoice id (\d+)/);
+  const idToOpen = m ? m[1] : prompt('Enter invoice id to open printable:');
+  if (idToOpen) window.open('/invoice-template.html?id=' + encodeURIComponent(idToOpen), '_blank');
+});
+
+/* ---------- Invoices list logic ---------- */
+async function loadInvoicesList() {
+  const q = document.getElementById('searchInv').value.trim();
+  let url = '/api/invoices';
+  if (q) url += '?q=' + encodeURIComponent(q);
+  const list = await fetch(url).then(r=>r.json());
+  const tbody = document.querySelector('#invoicesTable tbody');
+  tbody.innerHTML = '';
+  (list||[]).forEach(inv=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${inv.id}</td>
+      <td>${inv.invoice_no||''}</td>
+      <td>${inv.date||''}</td>
+      <td>${inv.customer_name||inv.customer||''}</td>
+      <td class="right">${inv.total!==undefined?Number(inv.total).toFixed(2):''}</td>
+      <td>
+        <button class="ghost openInv" data-id="${inv.id}">Open</button>
+        <button class="ghost printInv" data-id="${inv.id}">Print</button>
+        <button class="ghost delInv" data-id="${inv.id}" style="background:#ffecec">Delete</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+  document.getElementById('invCount').textContent = (list||[]).length;
+
+  document.querySelectorAll('.openInv').forEach(b=>b.addEventListener('click', e=>{
+    const id = e.target.dataset.id;
+    window.location.href = '/invoice-template.html?id=' + encodeURIComponent(id);
+  }));
+  document.querySelectorAll('.printInv').forEach(b=>b.addEventListener('click', e=>{
+    const id = e.target.dataset.id;
+    window.open('/invoice-template.html?id=' + encodeURIComponent(id), '_blank');
+  }));
+  document.querySelectorAll('.delInv').forEach(b=>b.addEventListener('click', async e=>{
+    const id = e.target.dataset.id;
+    if (!confirm('Delete invoice #'+id+' ?')) return;
+    const resp = await fetch('/api/invoices/' + id, { method: 'DELETE' });
+    const j = await resp.json();
+    if (resp.ok) loadInvoicesList(); else alert('Delete failed: ' + JSON.stringify(j));
+  }));
+}
+
+/* ---------- Printable view panel ---------- */
+document.getElementById('openPrintableDirect').addEventListener('click', ()=>{
+  const id = document.getElementById('printInvoiceId').value.trim();
+  if (!id) return alert('Enter invoice id');
+  window.open('/invoice-template.html?id=' + encodeURIComponent(id), '_blank');
+});
+
+/* ---------- Day Report: opening/closing balance + today's totals & print ---------- */
+
+function isoDate(d) {
+  const dt = new Date(d);
+  return dt.toISOString().slice(0,10);
+}
+async function fetchSummaryRange(from, to) {
+  const url = `/api/reports/summary${from && to ? `?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}` : ''}`;
+  const r = await fetch(url);
+  if (!r.ok) throw new Error('Failed to fetch summary: ' + r.statusText);
+  return r.json();
+}
+async function fetchTransactionsRange(from, to) {
+  const url = `/api/transactions?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
+  const r = await fetch(url);
+  if (!r.ok) throw new Error('Failed to fetch transactions: ' + r.statusText);
+  return r.json();
+}
+function formatCurrency(n) {
+  return '₹' + Number(n || 0).toFixed(2);
+}
+
+async function buildAndPrintDayReport() {
+  try {
+    const today = new Date();
+    const todayStr = isoDate(today);
+    const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = isoDate(yesterday);
+
+    // Opening balance: if user set opening for today (localStorage), use it. Otherwise compute net up to yesterday.
+    let openingValue = loadOpening();
+    if (openingValue === null) {
+      const openingSummary = await fetchSummaryRange('1970-01-01', yesterdayStr);
+      openingValue = (openingSummary.income || 0) - (openingSummary.expense || 0);
+    }
+
+    const todaySummary = await fetchSummaryRange(todayStr, todayStr);
+    const todayIncome = todaySummary.income || 0;
+    const todayExpense = todaySummary.expense || 0;
+
+    // closing balance = opening + today's income - today's expense
+    const closingBalance = openingValue + todayIncome - todayExpense;
+
+    const txs = await fetchTransactionsRange(todayStr, todayStr);
+
+    const reportHtml = `
+      <!doctype html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Day Report — ${todayStr}</title>
+        <style>
+          body { font-family: Arial, Helvetica, sans-serif; padding:20px; color:#111 }
+          h1,h2{margin:0}
+          .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px }
+          .meta { font-size:14px; margin-top:6px; color:#444 }
+          .box { border:1px solid #ddd; padding:12px; border-radius:8px; margin-bottom:12px; background:#fff }
+          table { width:100%; border-collapse:collapse; margin-top:8px }
+          th,td { padding:8px; border:1px solid #eee; text-align:left }
+          th { background:#fafafa }
+          .right { text-align:right }
+          .totals { display:flex; gap:12px; margin-top:12px }
+          .totals .block { flex:1; padding:12px; border:1px solid #eee; border-radius:8px; background:#fafafa }
+          .small { color:#666; font-size:13px }
+          @media print { body { padding:6mm } .no-print{display:none} }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div>
+            <h1>${COMPANY.name}</h1>
+            <div class="meta">${COMPANY.addressLine1}</div>
+            <div class="meta">GSTIN: ${COMPANY.gstin}</div>
+            <div class="meta small">Day Report — <strong>${todayStr}</strong></div>
+            <div class="meta small">Generated: ${new Date().toLocaleString()}</div>
+          </div>
+          <div style="text-align:right">
+            <div><strong>Opening Balance</strong></div>
+            <div style="font-size:20px; margin-top:6px;">${formatCurrency(openingValue)}</div>
+            <div style="margin-top:12px;" class="small">Opening = user-set or net before today</div>
+          </div>
+        </div>
+
+        <div class="box">
+          <div style="display:flex;gap:12px">
+            <div style="flex:1">
+              <div class="small">Today's Income</div>
+              <div style="font-size:20px; font-weight:700">${formatCurrency(todayIncome)}</div>
+            </div>
+            <div style="flex:1">
+              <div class="small">Today's Expense</div>
+              <div style="font-size:20px; font-weight:700">${formatCurrency(todayExpense)}</div>
+            </div>
+            <div style="flex:1">
+              <div class="small">Closing Balance</div>
+              <div style="font-size:20px; font-weight:700; color:#0b79ff">${formatCurrency(closingBalance)}</div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h2>Today's Transactions</h2>
+          <table>
+            <thead><tr><th>#</th><th>Date</th><th>Type</th><th>Category</th><th class="right">Amount</th><th>Reference</th><th>Notes</th></tr></thead>
+            <tbody>
+              ${ (txs || []).map((t, i) => `
+                <tr>
+                  <td>${i+1}</td>
+                  <td>${t.date || ''}</td>
+                  <td>${t.type || ''}</td>
+                  <td>${t.category || ''}</td>
+                  <td class="right">${formatCurrency(t.amount)}</td>
+                  <td>${t.reference || ''}</td>
+                  <td>${t.notes || ''}</td>
+                </tr>
+              `).join('') }
+            </tbody>
+          </table>
+        </div>
+
+        <div style="margin-top:18px" class="small">
+          Note: Opening balance (if set) overrides computed opening balance from past transactions.
+        </div>
+
+        <div style="margin-top:24px">
+          <button onclick="window.print()" class="no-print" style="padding:8px 12px;background:#0b79ff;color:white;border:none;border-radius:6px">Print</button>
+        </div>
+      </body>
+      </html>
+    `;
+    const w = window.open('', '_blank', 'width=900,height=800');
+    w.document.open();
+    w.document.write(reportHtml);
+    w.document.close();
+    w.focus();
+    setTimeout(()=>{ try { w.print(); } catch(e){ console.warn('print failed', e); } }, 600);
+
+  } catch (err) {
+    alert('Day report failed: ' + (err.message || err));
+    console.error(err);
+  }
+}
+
+const printDayBtn = document.getElementById('printDayReport');
+if (printDayBtn) {
+  printDayBtn.addEventListener('click', () => {
+    printDayBtn.disabled = true;
+    printDayBtn.textContent = 'Preparing...';
+    buildAndPrintDayReport().finally(()=>{ printDayBtn.disabled = false; printDayBtn.textContent = 'Print Day Report'; });
+  });
+}
+
+/* ---------- Reset button wiring (forgiving) ---------- */
+const resetBtn = document.getElementById('resetDataBtn');
+if (resetBtn) {
+  resetBtn.addEventListener('click', async () => {
+    const step1 = confirm('This will permanently erase all stored data (a backup will be created). Are you sure you want to proceed?');
+    if (!step1) return;
+
+    const typedRaw = prompt('Type RESET to confirm permanent wipe of data:');
+    console.log('Reset prompt input:', typedRaw);
+    // forgiving check: trim + uppercase
+    if (!typedRaw || typedRaw.trim().toUpperCase() !== 'RESET') {
+      alert('Reset cancelled (confirmation not matched).');
+      return;
+    }
+
+    // If your server requires a RESET_SECRET, uncomment and prompt for it:
+    // const secret = prompt('Enter reset secret (provided by server admin):');
+
+    resetBtn.disabled = true;
+    resetBtn.textContent = 'Resetting...';
+
+    try {
+      const resp = await fetch('/api/reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ confirm: 'RESET' /*, secret */ })
+      });
+      const j = await resp.json();
+      if (!resp.ok) {
+        alert('Reset failed: ' + (j && (j.error || j.message) ? (j.error||j.message) : JSON.stringify(j)));
+        console.error('Reset error', j);
+      } else {
+        alert('Reset completed. DB backup saved at:\n' + (j.backup || 'none') + '\nThe page will reload.');
+        window.location.reload();
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Reset request failed: ' + err.message);
+    } finally {
+      resetBtn.disabled = false;
+      resetBtn.textContent = 'Reset Data';
+    }
+  });
+}
+
+/* ---------- Init UI & wiring ---------- */
+document.getElementById('refreshInv').addEventListener('click', loadInvoicesList);
+document.getElementById('searchInv').addEventListener('keydown', (e)=>{ if(e.key==='Enter') loadInvoicesList(); });
+
+function initInvoiceFormDefaults(){
+  document.getElementById('invoiceDate').value = new Date().toISOString().slice(0,10);
+  clearInvoiceRows();
+  document.getElementById('invoiceNo').value = '';
+}
+function clearInvoiceRows(){ invoiceItemsBody.innerHTML=''; for(let i=0;i<6;i++) addInvoiceRow(); calculateInvoiceTotals(); }
+function addInvoiceRow(data){ invoiceItemsBody.appendChild(createInvoiceRow(invoiceItemsBody.querySelectorAll('tr').length, data)); }
+
+/* first load */
+loadDashboard();
+loadInvoicesList();
+initInvoiceFormDefaults();
+calculateInvoiceTotals();
+
+// when switching views, refresh relevant data
+navButtons.forEach(b => b.addEventListener('click', () => {
+  if (b.dataset.view === 'dashboard') loadDashboard();
+  if (b.dataset.view === 'invoices') loadInvoicesList();
+}));
+</script>
+</body>
+</html>

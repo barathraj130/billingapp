@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Invoice - JBS KNIT WEAR</title>
+<style>
+  body { font-family: 'Times New Roman', serif; margin: 20px; }
+  .invoice-box {
+    max-width: 800px;
+    margin: auto;
+    border: 1px solid #000;
+    padding: 20px 25px;
+  }
+  h1, h2, h3, h4, h5, h6 { margin: 0; padding: 0; }
+  .header {
+    text-align: center;
+    border-bottom: 1px solid #000;
+    padding-bottom: 8px;
+  }
+  .header .top-row { display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px; }
+  .header h2 { font-size: 24px; text-transform: uppercase; font-weight: bold; }
+  .header .addr { font-size:12px; margin-top:4px; }
+
+  .details { margin-top: 10px; display: flex; justify-content:space-between; font-size:14px; }
+  .details div { width: 48%; }
+
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+  th, td {
+    border: 1px solid #000;
+    padding: 5px;
+    font-size: 14px;
+  }
+  th { text-align: center; background: #f5f5f5; }
+  td:nth-child(1) { text-align: center; width: 5%; }
+  td:nth-child(3), td:nth-child(4), td:nth-child(5) { text-align: right; }
+
+  .total {
+    text-align: right;
+    margin-top: 8px;
+    font-size: 16px;
+    font-weight: bold;
+  }
+
+  .footer {
+    margin-top: 40px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+  }
+  .footer .amount { width: 65%; }
+  .footer .sign { text-align: right; width: 30%; }
+</style>
+</head>
+<body>
+  <div class="invoice-box">
+    <div class="header">
+      <div class="top-row">
+        <div>JAMES<br>Ph : 97919 02205</div>
+        
+      </div>
+      <h2>JBS KNIT WEAR</h2>
+      <div class="addr">3(2)/2B, Nesavalar Colony 2nd Street, P.N.Road, Tirupur - 641 602.</div>
+      <div style="margin-top:6px;"><strong>GSTIN NUMBER:</strong> 33CKAPJ7513F1ZK</div>
+    </div>
+
+    <div class="details">
+      <div class="left">
+        <div><strong>No:</strong> <span id="invNo">—</span></div>
+        <div style="margin-top:6px;"><strong>To M/s:</strong> <span id="customerName">..............................................</span></div>
+      </div>
+      <div class="right" style="text-align:right;">
+        <div><strong>Date:</strong> <span id="invDate"></span></div>
+        <div style="margin-top:18px; font-size:12px;">&nbsp;</div>
+      </div>
+    </div>
+
+    <table id="itemsTable">
+      <thead>
+        <tr>
+          <th>S.No</th>
+          <th>Particulars</th>
+          <th>Qty</th>
+          <th>Rate (Rs)</th>
+          <th>Amount (Rs)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- filled dynamically -->
+      </tbody>
+    </table>
+
+    <div class="total">
+      Total: ₹<span id="totalAmount">0.00</span>
+    </div>
+
+    <div class="footer">
+      <div class="amount">
+        <p>Rupees: <span id="amountWords">......................................................</span></p>
+      </div>
+      <div class="sign">
+        <p>For <strong>JBS KNIT WEAR</strong></p>
+        <br><br>
+        <p>Authorized Signatory</p>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* If you pass an invoice id via ?id=... this page can fetch details from /api/invoices/:id
+   But if you simply open this page directly, use the example data below. */
+
+function getQuery(name) {
+  const p = new URLSearchParams(window.location.search);
+  return p.get(name);
+}
+
+async function loadInvoiceFromApi(id) {
+  const r = await fetch('/api/invoices/' + encodeURIComponent(id));
+  if (!r.ok) throw new Error('Invoice not found');
+  return r.json();
+}
+
+async function renderInvoice(invoice) {
+  document.getElementById('invNo').textContent = invoice.invoice_no || invoice.id || '—';
+  document.getElementById('invDate').textContent = invoice.date || new Date().toISOString().slice(0,10);
+  document.getElementById('customerName').textContent = invoice.customer_name || invoice.customer || '—';
+  const tbody = document.querySelector('#itemsTable tbody');
+  tbody.innerHTML = '';
+  let total = 0;
+  (invoice.items || []).forEach((it, i) => {
+    const amt = (it.line_total !== undefined) ? it.line_total : ((it.qty||0) * (it.unit_price||0));
+    total += amt;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${i+1}</td>
+                    <td>${it.description || ''}</td>
+                    <td>${it.qty || ''}</td>
+                    <td style="text-align:right">${(it.unit_price||0).toFixed(2)}</td>
+                    <td style="text-align:right">${Number(amt).toFixed(2)}</td>`;
+    tbody.appendChild(tr);
+  });
+  document.getElementById('totalAmount').textContent = Number(total).toFixed(2);
+  // amount in words - reuse a simple converter (keeps short for printing)
+  function numberToWords(num) {
+    const a = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten',
+               'Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
+    const b = ['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
+    if ((num = num.toString()).length > 9) return 'Overflow';
+    let n = ('000000000' + num).substr(-9).match(/^(\d{2})(\d{2})(\d{2})(\d{1})(\d{2})$/);
+    if (!n) return; let str = '';
+    str += (n[1] != 0) ? (a[Number(n[1])] || b[n[1][0]] + ' ' + a[n[1][1]]) + ' Crore ' : '';
+    str += (n[2] != 0) ? (a[Number(n[2])] || b[n[2][0]] + ' ' + a[n[2][1]]) + ' Lakh ' : '';
+    str += (n[3] != 0) ? (a[Number(n[3])] || b[n[3][0]] + ' ' + a[n[3][1]]) + ' Thousand ' : '';
+    str += (n[4] != 0) ? (a[Number(n[4])] || b[n[4][0]] + ' ' + a[n[4][1]]) + ' Hundred ' : '';
+    str += (n[5] != 0) ? ((str != '') ? 'and ' : '') + (a[Number(n[5])] || b[n[5][0]] + ' ' + a[n[5][1]]) + ' Rupees Only' : 'Rupees Only';
+    return str;
+  }
+  document.getElementById('amountWords').textContent = numberToWords(Math.round(total));
+}
+
+(async function(){
+  const id = getQuery('id');
+  if (id) {
+    try {
+      const invoice = await loadInvoiceFromApi(id);
+      await renderInvoice(invoice);
+    } catch (e) {
+      console.error(e);
+      // fallback sample
+      renderInvoice({
+        invoice_no: '—',
+        date: new Date().toISOString().slice(0,10),
+        items: []
+      });
+    }
+  } else {
+    // no id: show blank sample
+    renderInvoice({
+      invoice_no: '—',
+      date: new Date().toISOString().slice(0,10),
+      items: []
+    });
+  }
+})();
+</script>
+</body>
+</html>

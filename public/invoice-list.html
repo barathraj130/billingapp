@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Invoices — JBS KNIT WEAR</title>
+<style>
+  body{font-family: Arial, Helvetica, sans-serif;background:#f5f7fb;margin:0;padding:24px}
+  .wrap{max-width:1100px;margin:0 auto}
+  h1{margin-bottom:12px}
+  .card{background:#fff;padding:16px;border-radius:8px;box-shadow:0 6px 18px rgba(10,10,30,0.06)}
+  table{width:100%;border-collapse:collapse;margin-top:8px}
+  th,td{padding:10px;border-bottom:1px solid #eee;text-align:left}
+  th{background:#fafafa}
+  .actions button{margin-right:6px}
+  .muted{color:#666;font-size:13px}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Saved Invoices</h1>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <input id="search" placeholder="Search invoice no or customer" style="padding:8px;border:1px solid #ddd;border-radius:6px;width:320px"/>
+          <button id="refresh">Refresh</button>
+        </div>
+        <div class="muted">Total: <span id="count">0</span></div>
+      </div>
+
+      <table id="listTable">
+        <thead>
+          <tr><th>ID</th><th>Invoice No</th><th>Date</th><th>Customer</th><th>Subtotal</th><th>Total</th><th>Actions</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+<script>
+const API = '/api';
+const tbody = document.querySelector('#listTable tbody');
+const countEl = document.getElementById('count');
+const searchEl = document.getElementById('search');
+
+async function loadInvoices() {
+  let url = API + '/invoices';
+  const q = (searchEl.value || '').trim();
+  if (q) url += '?q=' + encodeURIComponent(q); // backend may ignore q if not supported
+  const res = await fetch(url);
+  const list = await res.json();
+  render(list);
+}
+
+function render(list) {
+  tbody.innerHTML = '';
+  if (!Array.isArray(list)) return;
+  countEl.textContent = list.length;
+  list.forEach(inv => {
+    const tr = document.createElement('tr');
+    const invNo = inv.invoice_no || inv.id || '';
+    const date = inv.date || '';
+    const cust = inv.customer_name || inv.customer || '';
+    const subtotal = inv.subtotal !== undefined ? Number(inv.subtotal).toFixed(2) : '';
+    const total = inv.total !== undefined ? Number(inv.total).toFixed(2) : '';
+    tr.innerHTML = `
+      <td>${inv.id}</td>
+      <td>${invNo}</td>
+      <td>${date}</td>
+      <td>${cust}</td>
+      <td>${subtotal}</td>
+      <td>${total}</td>
+      <td class="actions">
+        <button data-id="${inv.id}" class="openBtn">Open</button>
+        <button data-id="${inv.id}" class="printBtn">Print</button>
+        <button data-id="${inv.id}" class="deleteBtn" style="background:#e74c3c;color:#fff">Delete</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // attach handlers
+  document.querySelectorAll('.openBtn').forEach(b => b.onclick = e => {
+    const id = e.target.dataset.id;
+    window.location.href = '/invoice-template.html?id=' + encodeURIComponent(id);
+  });
+  document.querySelectorAll('.printBtn').forEach(b => b.onclick = e => {
+    const id = e.target.dataset.id;
+    window.open('/invoice-template.html?id=' + encodeURIComponent(id), '_blank');
+  });
+  document.querySelectorAll('.deleteBtn').forEach(b => b.onclick = async e => {
+    const id = e.target.dataset.id;
+    if (!confirm('Delete invoice #' + id + ' ?')) return;
+    // Try DELETE endpoint; if not present, show instructions below
+    const resp = await fetch(API + '/invoices/' + id, { method: 'DELETE' });
+    const j = await resp.json();
+    if (resp.ok) {
+      alert('Deleted');
+      loadInvoices();
+    } else {
+      alert('Delete failed: ' + (j && j.error ? j.error : JSON.stringify(j)));
+    }
+  });
+}
+
+document.getElementById('refresh').addEventListener('click', loadInvoices);
+searchEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') loadInvoices(); });
+
+// initial load
+loadInvoices();
+</script>
+</body>
+</html>

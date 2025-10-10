@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Create Invoice — JBS KNIT WEAR</title>
+<style>
+  body{font-family: Arial, Helvetica, sans-serif; background:#f5f7fb; margin:0; padding:20px;}
+  .wrap{max-width:980px;margin:0 auto}
+  h1{font-size:28px}
+  .card{background:#fff;padding:18px;border-radius:8px;box-shadow:0 6px 18px rgba(10,10,30,0.06);margin-top:12px}
+  .row{display:flex;gap:12px;align-items:center}
+  input[type="text"], input[type="number"], select{padding:8px;border:1px solid #ddd;border-radius:6px;font-size:14px;width:100%}
+  button{padding:8px 12px;border-radius:6px;border:0;background:#0b79ff;color:#fff;cursor:pointer}
+  table{width:100%;border-collapse:collapse;margin-top:12px}
+  th,td{padding:8px;border:1px solid #e8e8e8;text-align:left}
+  th{background:#fafafa}
+  .right{text-align:right}
+  .small{width:90px}
+  .actions{display:flex;gap:8px;margin-top:12px}
+  .muted{color:#666;font-size:13px}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Create Invoice</h1>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;gap:12px">
+        <div style="flex:1">
+          <label>Invoice No.<br/><input id="invoiceNo" type="text" placeholder="Auto or enter"/></label>
+        </div>
+        <div style="flex:1">
+          <label>Date<br/><input id="invoiceDate" type="date"/></label>
+        </div>
+        <div style="flex:1">
+          <label>Customer Name<br/><input id="customerName" type="text" placeholder="Retail customer name"/></label>
+        </div>
+      </div>
+
+      <table id="itemsTable" aria-label="invoice items">
+        <thead>
+          <tr>
+            <th style="width:4%">S.No</th>
+            <th>Particulars (Product)</th>
+            <th style="width:12%">Qty</th>
+            <th style="width:18%">Rate (Rs)</th>
+            <th style="width:18%">Amount (Rs)</th>
+            <th style="width:8%">Remove</th>
+          </tr>
+        </thead>
+        <tbody id="itemsBody"></tbody>
+      </table>
+
+      <div class="actions" style="margin-top:10px">
+        <button id="addRowBtn">+ Add product</button>
+        <button id="clearBtn" style="background:#666">Clear all</button>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;margin-top:12px;gap:16px">
+        <div style="width:320px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px"><div class="muted">Subtotal</div><div id="subtotal" class="right">0.00</div></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+            <div class="muted">Tax (%) <input id="taxPercent" type="number" min="0" max="100" value="0" style="width:60px;margin-left:8px"/></div>
+            <div id="taxAmount" class="right">0.00</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-weight:700;font-size:16px"><div>Total</div><div id="grandTotal" class="right">0.00</div></div>
+        </div>
+      </div>
+
+      <div style="margin-top:10px;display:flex;gap:8px;align-items:center">
+        <button id="saveInvoiceBtn">Save Invoice</button>
+        <button id="printBtn" style="background:#2a9d8f">Print Invoice</button>
+        <div id="saveMsg" class="muted"></div>
+      </div>
+
+      <div style="margin-top:12px" class="muted">Tip: Enter product description, quantity, rate — amounts are calculated automatically. After saving you can open printable invoice.</div>
+    </div>
+  </div>
+
+<script>
+/* ---------- Helpers & state ---------- */
+const LINES_INITIAL = 6;
+const itemsBody = document.getElementById('itemsBody');
+const invoiceNoEl = document.getElementById('invoiceNo');
+const invoiceDateEl = document.getElementById('invoiceDate');
+const customerEl = document.getElementById('customerName');
+const subtotalEl = document.getElementById('subtotal');
+const taxPercentEl = document.getElementById('taxPercent');
+const taxAmountEl = document.getElementById('taxAmount');
+const grandTotalEl = document.getElementById('grandTotal');
+const saveMsg = document.getElementById('saveMsg');
+
+/* create a row element */
+function createRow(index, data = {}) {
+  const tr = document.createElement('tr');
+  tr.dataset.index = index;
+  tr.innerHTML = `
+    <td class="sno">${index+1}</td>
+    <td><input type="text" class="desc" placeholder="Product name or description" value="${data.description || ''}"/></td>
+    <td><input type="number" class="qty" min="0" step="1" value="${data.qty || ''}"/></td>
+    <td><input type="number" class="rate" min="0" step="0.01" value="${data.unit_price || data.rate || ''}"/></td>
+    <td class="right"><input type="text" class="amount" readonly value="${data.line_total? parseFloat(data.line_total).toFixed(2): ''}" /></td>
+    <td><button class="removeBtn" type="button">x</button></td>
+  `;
+  // event listeners
+  tr.querySelector('.qty').addEventListener('input', calculateAll);
+  tr.querySelector('.rate').addEventListener('input', calculateAll);
+  tr.querySelector('.desc').addEventListener('input', () => { /* optional validations */ });
+  tr.querySelector('.removeBtn').addEventListener('click', () => {
+    tr.remove();
+    reindexRows();
+    calculateAll();
+  });
+  return tr;
+}
+
+/* reindex rows S.No */
+function reindexRows(){
+  const rows = itemsBody.querySelectorAll('tr');
+  rows.forEach((r, i) => {
+    r.dataset.index = i;
+    r.querySelector('.sno').textContent = i+1;
+  });
+}
+
+/* add blank row */
+function addRow(data){
+  const idx = itemsBody.querySelectorAll('tr').length;
+  const r = createRow(idx, data);
+  itemsBody.appendChild(r);
+}
+
+/* clear all */
+function clearAll(){
+  itemsBody.innerHTML = '';
+  for(let i=0;i<LINES_INITIAL;i++) addRow();
+  calculateAll();
+}
+
+/* calculate totals */
+function calculateAll(){
+  const rows = itemsBody.querySelectorAll('tr');
+  let subtotal = 0;
+  rows.forEach(r => {
+    const q = parseFloat(r.querySelector('.qty').value) || 0;
+    const rate = parseFloat(r.querySelector('.rate').value) || 0;
+    const amt = q * rate;
+    r.querySelector('.amount').value = amt ? amt.toFixed(2) : '';
+    subtotal += amt;
+  });
+  const taxPerc = parseFloat(taxPercentEl.value) || 0;
+  const taxAmount = subtotal * (taxPerc/100);
+  const grand = subtotal + taxAmount;
+  subtotalEl.textContent = subtotal.toFixed(2);
+  taxAmountEl.textContent = taxAmount.toFixed(2);
+  grandTotalEl.textContent = grand.toFixed(2);
+}
+
+/* build payload and post to /api/invoices */
+async function saveInvoice(){
+  const items = [];
+  const rows = itemsBody.querySelectorAll('tr');
+  rows.forEach(r => {
+    const desc = r.querySelector('.desc').value.trim();
+    const qty = parseFloat(r.querySelector('.qty').value) || 0;
+    const rate = parseFloat(r.querySelector('.rate').value) || 0;
+    if (desc || qty || rate) {
+      items.push({
+        description: desc || 'Item',
+        qty: Math.round(qty),
+        unit_price: parseFloat(rate.toFixed(2)),
+        line_total: parseFloat((qty * rate).toFixed(2))
+      });
+    }
+  });
+  if (!items.length) { alert('Add at least one product'); return; }
+  const payload = {
+    invoice_no: invoiceNoEl.value || undefined,
+    date: invoiceDateEl.value || new Date().toISOString().slice(0,10),
+    customer_id: null,
+    subtotal: parseFloat(subtotalEl.textContent) || 0,
+    tax: parseFloat(taxAmountEl.textContent) || 0,
+    total: parseFloat(grandTotalEl.textContent) || 0,
+    notes: '',
+    items
+  };
+  saveMsg.textContent = 'Saving...';
+  try {
+    const resp = await fetch('/api/invoices', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+    const j = await resp.json();
+    if (j && j.id) {
+      saveMsg.innerHTML = `Saved invoice id <strong>${j.id}</strong>. <a href="/invoice-template.html?id=${j.id}" target="_blank">Open printable</a>`;
+      // set invoiceNo if server generated id
+      if (!invoiceNoEl.value) invoiceNoEl.value = `INV-${j.id}`;
+    } else {
+      saveMsg.textContent = 'Save returned: ' + JSON.stringify(j);
+    }
+  } catch (err) {
+    saveMsg.textContent = 'Save failed: ' + err.message;
+  }
+}
+
+/* print: open printable template after saving (or use current data) */
+function printInvoice(){
+  const id = new URLSearchParams(window.location.search).get('id');
+  if (id) {
+    window.open(`/invoice-template.html?id=${id}`, '_blank');
+  } else {
+    // if unsaved, open template in a new tab with values via postMessage
+    // simpler: ask user to save first
+    if (!confirm('Invoice not saved. Save now?')) return;
+    saveInvoice().then(() => {
+      // open printable with newly saved id from saveMsg
+      const m = saveMsg.textContent.match(/Saved invoice id (\\d+)/);
+      // fallback: allow user to click the link in saveMsg
+    });
+  }
+}
+
+/* ---------- Init UI ---------- */
+document.getElementById('addRowBtn').addEventListener('click', () => { addRow(); });
+document.getElementById('clearBtn').addEventListener('click', clearAll);
+document.getElementById('saveInvoiceBtn').addEventListener('click', async () => { calculateAll(); await saveInvoice(); });
+document.getElementById('printBtn').addEventListener('click', printInvoice);
+taxPercentEl.addEventListener('input', calculateAll);
+
+clearAll(); // populate initial rows
+calculateAll();
+</script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+body{font-family: Arial, Helvetica, sans-serif;background:#f5f7fb;color:#222;margin:0;padding:24px}
+.container{max-width:980px;margin:0 auto}
+h1{margin-bottom:8px}
+.card{background:white;padding:16px;border-radius:8px;box-shadow:0 6px 14px rgba(20,20,40,0.06);margin:12px 0}
+form label{display:block;margin:8px 0}
+input, select{padding:8px;border:1px solid #ddd;border-radius:6px;width:100%;box-sizing:border-box}
+button{padding:10px 14px;border:0;background:#0b79ff;color:white;border-radius:6px;cursor:pointer}
+table{width:100%;border-collapse:collapse;margin-top:8px}
+th,td{padding:8px;border-bottom:1px solid #eee;text-align:left}
+#summary{font-weight:600}

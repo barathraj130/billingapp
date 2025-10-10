@@ -1,0 +1,5 @@
+echo "node_modules/
+billing.db
+*.bak
+.env
+" > .gitignore
