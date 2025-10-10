@@ -3,8 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>JBS Knit Wear — Billing (Mobile)</title>
-
+<title>JBS Knit Wear — Billing</title>
 <style>
   :root{
     --bg:#f4f7fb; --card:#fff; --accent:#0b79ff; --muted:#6b7280; --danger:#e74c3c;
@@ -14,36 +13,39 @@
   a{color:var(--accent)}
   .app{min-height:100vh;display:flex;flex-direction:column}
 
-  /* TOPBAR */
-  .topbar{position:sticky;top:0;z-index:30;background:var(--card);display:flex;align-items:center;gap:12px;padding:12px;border-bottom:1px solid #eef2f5}
-  .hamb{width:44px;height:44px;border-radius:10px;border:0;background:transparent;font-size:20px;line-height:44px;cursor:pointer}
-  .brand{font-weight:800;font-size:18px}
-  .top-actions{margin-left:auto;display:flex;align-items:center;gap:10px}
-
-  /* main layout */
-  .layout{display:flex;gap:16px;padding:14px;box-sizing:border-box}
-  /* sidebar becomes offcanvas on mobile */
-  .sidebar{width:260px;flex-shrink:0;background:var(--card);padding:12px;border-radius:12px;box-shadow:0 8px 20px rgba(10,20,40,0.04)}
-  .navbtn{display:block;padding:10px;border-radius:8px;border:0;background:transparent;text-align:left;font-weight:600}
-  .navbtn.small{font-weight:500;color:var(--muted);font-size:13px}
-
-  .main{flex:1;min-width:0}
-
-  /* cards */
-  .card{background:var(--card);padding:14px;border-radius:12px;box-shadow:0 8px 20px rgba(10,20,40,0.04);margin-bottom:14px}
-  h1{margin:0 0 10px 0;font-size:22px}
-  h2{margin:0 0 8px 0;font-size:18px}
-
-  /* form inputs */
-  input[type="text"], input[type="number"], input[type="date"], select, textarea {
-    height:var(--input-h); padding:10px 12px; border-radius:10px; border:1px solid #edf2f7; font-size:15px; box-sizing:border-box;
+  /* topbar + slide menu */
+  .topbar {
+    position:sticky; top:0; z-index:60; display:flex; align-items:center;
+    gap:12px; padding:10px 14px; background:var(--card); border-bottom:1px solid #eef2f5;
   }
-  .full{width:100%}
-  .row{display:flex;gap:10px;align-items:center}
-  .row.wrap{flex-wrap:wrap}
+  .brand{font-weight:800;font-size:18px;margin-left:6px}
+  .menu-toggle{width:44px;height:44px;border-radius:10px;border:0;background:transparent;font-size:20px;cursor:pointer}
+  .slide-menu {
+    position:fixed; left:-320px; top:0; bottom:0; width:300px; background:var(--card);
+    box-shadow: 2px 0 18px rgba(10,20,40,0.08); transition:left .22s ease; padding:18px; z-index:70;
+  }
+  .slide-menu.open { left:0; }
+  .slide-menu .close { display:block; margin-bottom:8px; }
+  @media (min-width:1024px) {
+    .slide-menu { position:static; left:0; width:240px; box-shadow:none; }
+    .content-with-sidebar { margin-left:260px; }
+  }
+
+  .top-actions{margin-left:auto;display:flex;align-items:center;gap:10px}
   .btn{background:var(--accent);color:#fff;border:0;padding:10px 14px;border-radius:10px;font-weight:700;cursor:pointer}
   .btn.ghost{background:transparent;border:1px solid #e6e9ee;color:#333}
   .btn.small{padding:8px 10px;font-size:14px}
+  input[type="text"], input[type="number"], input[type="date"], select, textarea {
+    height:var(--input-h); padding:10px 12px; border-radius:10px; border:1px solid #edf2f7; font-size:15px; box-sizing:border-box;
+  }
+
+  /* main content */
+  .layout{display:flex;gap:16px;padding:14px;box-sizing:border-box}
+  .main{flex:1;min-width:0}
+  .card{background:var(--card);padding:14px;border-radius:12px;box-shadow:0 8px 20px rgba(10,20,40,0.04);margin-bottom:14px}
+  h1{margin:0 0 10px 0;font-size:22px}
+  h2{margin:0 0 8px 0;font-size:18px}
+  .muted{color:var(--muted)}
 
   /* invoice items responsive */
   .items{display:flex;flex-direction:column;gap:8px}
@@ -55,11 +57,9 @@
   .item-row .sno{font-weight:700;text-align:center}
   .item-row input{height:38px;padding:8px;border-radius:8px;border:1px solid #eef2f5}
   .item-row .amount{font-weight:700;text-align:right;padding-right:8px}
-
-  /* stacked layout for small screens */
   @media (max-width:760px){
     .layout{flex-direction:column;padding:10px}
-    .sidebar{display:none}
+    .slide-menu{display:none}
     .item-row{grid-template-columns: 48px 1fr; grid-template-rows: auto auto auto; grid-auto-flow:row; gap:8px}
     .item-row .sno{grid-row:1}
     .item-row .desc{grid-column:2;grid-row:1}
@@ -69,22 +69,15 @@
     .item-row .amount{justify-content:flex-end}
   }
 
-  /* summary box */
   .summary{display:flex;gap:12px;flex-wrap:wrap}
   .summary .box{flex:1;min-width:160px;padding:12px;border-radius:10px;background:#fff}
   .summary .value{font-size:18px;font-weight:700;margin-top:6px}
 
-  /* invoice totals right column */
   .invoice-footer{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
   .totals{min-width:160px;text-align:right}
   .totals .line{display:flex;justify-content:space-between;padding:6px 0}
 
-  /* tables (desktop) */
   .table-wrap{overflow:auto}
-
-  /* helper */
-  .muted{color:var(--muted)}
-  .danger{color:var(--danger)}
   .hidden{display:none}
   .center{text-align:center}
   .mb8{margin-bottom:8px}
@@ -93,9 +86,9 @@
 <body>
   <div class="app">
 
-    <!-- topbar -->
+    <!-- Topbar -->
     <div class="topbar">
-      <button id="hamb" class="hamb" aria-label="menu">☰</button>
+      <button id="menuToggle" class="menu-toggle" aria-label="menu">☰</button>
       <div class="brand">JBS KNIT WEAR</div>
 
       <div class="top-actions">
@@ -106,177 +99,182 @@
       </div>
     </div>
 
-    <div class="layout">
-      <!-- sidebar (hidden on phone) -->
-      <aside class="sidebar" id="sidebar">
-        <div class="card">
-          <div style="font-weight:800;font-size:18px">Menu</div>
-          <hr style="border:none;border-top:1px solid #f1f4f7;margin:8px 0">
-          <button class="navbtn" data-view="dashboard">Dashboard <div class="small muted">Quick totals</div></button>
-          <button class="navbtn" data-view="transactions">Transactions <div class="small muted">Quick add</div></button>
-          <button class="navbtn" data-view="create">Create Invoice</button>
-          <button class="navbtn" data-view="invoices">Invoices</button>
-          <button class="navbtn" data-view="print">Printable</button>
-        </div>
-      </aside>
+    <!-- Slide-out menu (mobile), static sidebar on desktop -->
+    <nav id="slideMenu" class="slide-menu" aria-hidden="true">
+      <button id="menuClose" class="close">Close ✕</button>
+      <div style="font-weight:800;margin-bottom:10px">Menu</div>
+      <button class="navbtn" data-view="dashboard">Dashboard</button>
+      <button class="navbtn" data-view="transactions">Transactions</button>
+      <button class="navbtn" data-view="create">Create Invoice</button>
+      <button class="navbtn" data-view="invoices">Invoices</button>
+      <button class="navbtn" data-view="print">Printable</button>
+    </nav>
 
-      <!-- main -->
-      <main class="main">
-        <!-- Dashboard -->
-        <section id="view-dashboard" class="card">
-          <h1>Billing Dashboard</h1>
-          <div class="summary mb8">
-            <div class="box">
-              <div class="muted">Total Income</div>
-              <div class="value" id="totalIncome">₹0.00</div>
-            </div>
-            <div class="box">
-              <div class="muted">Total Expense</div>
-              <div class="value" id="totalExpense">₹0.00</div>
-            </div>
-            <div class="box">
-              <div class="muted">Profit</div>
-              <div class="value" id="profitVal">₹0.00</div>
-            </div>
-          </div>
+    <!-- main content wrapper -->
+    <div class="content-with-sidebar">
+      <div class="layout">
+        <main class="main">
 
-          <div style="margin-top:12px" class="card">
-            <h2 class="mb8">Recent transactions</h2>
-            <div class="table-wrap">
-              <table style="width:100%;border-collapse:collapse">
-                <thead>
-                  <tr style="background:#fafafa">
-                    <th style="padding:10px;text-align:left">Date</th>
-                    <th style="padding:10px;text-align:left">Type</th>
-                    <th style="padding:10px;text-align:left">Category</th>
-                    <th style="padding:10px;text-align:right">Amount</th>
-                  </tr>
-                </thead>
-                <tbody id="recentTbody"></tbody>
-              </table>
-            </div>
-          </div>
-        </section>
-
-        <!-- Transactions -->
-        <section id="view-transactions" class="card hidden">
-          <h2>Add Transaction</h2>
-          <div class="row wrap" style="margin-top:8px">
-            <select id="txType" style="width:120px"><option value="income">Income</option><option value="expense">Expense</option></select>
-            <input id="txCat" type="text" placeholder="Category (sales, rent...)" class="full" />
-            <input id="txAmount" type="number" placeholder="Amount" style="width:120px" />
-            <input id="txDate" type="date" style="width:160px" />
-          </div>
-          <div class="row" style="margin-top:8px">
-            <input id="txRef" placeholder="Reference (invoice no)" class="full" />
-            <button id="txSave" class="btn">Save</button>
-          </div>
-        </section>
-
-        <!-- Create Invoice -->
-        <section id="view-create" class="card hidden">
-          <h2>Create Invoice</h2>
-
-          <div class="row wrap" style="margin-top:10px">
-            <input id="invNo" placeholder="Invoice no (auto)" style="width:140px" />
-            <input id="invDate" type="date" style="width:170px" />
-            <input id="invCustomer" placeholder="Customer name" class="full" />
-          </div>
-
-          <!-- Invoice items (responsive rows) -->
-          <div style="margin-top:12px">
-            <div style="display:flex;justify-content:space-between;align-items:center">
-              <div class="muted">Products</div>
-              <div style="display:flex;gap:8px">
-                <button id="addItem" class="btn small">+ Add</button>
-                <button id="clearItems" class="btn small ghost">Clear</button>
-                <button id="recalc" class="btn small ghost">Recalc</button>
+          <!-- Dashboard -->
+          <section id="view-dashboard" class="card">
+            <h1>Billing Dashboard</h1>
+            <div class="summary mb8">
+              <div class="box">
+                <div class="muted">Total Income</div>
+                <div class="value" id="totalIncome">₹0.00</div>
+              </div>
+              <div class="box">
+                <div class="muted">Total Expense</div>
+                <div class="value" id="totalExpense">₹0.00</div>
+              </div>
+              <div class="box">
+                <div class="muted">Profit</div>
+                <div class="value" id="profitVal">₹0.00</div>
               </div>
             </div>
 
-            <div id="items" class="items" style="margin-top:10px"></div>
-          </div>
-
-          <div class="invoice-footer" style="margin-top:12px">
-            <div style="flex:1"></div>
-            <div class="totals">
-              <div class="line"><div class="muted">Subtotal</div><div id="subtotal">0.00</div></div>
-              <div class="line"><div class="muted">Tax % <input id="taxPerc" type="number" value="0" style="width:70px;margin-left:8px" /></div><div id="taxAmt">0.00</div></div>
-              <div class="line" style="font-weight:800;font-size:16px"><div>Total</div><div id="grandTotal">0.00</div></div>
+            <div style="margin-top:12px" class="card">
+              <h2 class="mb8">Recent transactions</h2>
+              <div class="table-wrap">
+                <table style="width:100%;border-collapse:collapse">
+                  <thead>
+                    <tr style="background:#fafafa">
+                      <th style="padding:10px;text-align:left">Date</th>
+                      <th style="padding:10px;text-align:left">Type</th>
+                      <th style="padding:10px;text-align:left">Category</th>
+                      <th style="padding:10px;text-align:right">Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody id="recentTbody"></tbody>
+                </table>
+              </div>
             </div>
-          </div>
+          </section>
 
-          <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
-            <button id="saveInvoice" class="btn">Save Invoice</button>
-            <button id="openPrintable" class="btn" style="background:#2a9d8f">Open Printable</button>
-            <div id="saveMsg" class="muted"></div>
-          </div>
-        </section>
+          <!-- Transactions -->
+          <section id="view-transactions" class="card hidden">
+            <h2>Add Transaction</h2>
+            <div class="row wrap" style="margin-top:8px">
+              <select id="txType" style="width:120px"><option value="income">Income</option><option value="expense">Expense</option></select>
+              <input id="txCat" type="text" placeholder="Category (sales, rent...)" class="full" />
+              <input id="txAmount" type="number" placeholder="Amount" style="width:120px" />
+              <input id="txDate" type="date" style="width:160px" />
+            </div>
+            <div class="row" style="margin-top:8px">
+              <input id="txRef" placeholder="Reference (invoice no)" class="full" />
+              <button id="txSave" class="btn">Save</button>
+            </div>
+          </section>
 
-        <!-- Invoices list -->
-        <section id="view-invoices" class="card hidden">
-          <h2>Saved Invoices</h2>
-          <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
-            <input id="searchInv" placeholder="Search invoice no or customer" class="full" />
-            <button id="refreshInv" class="btn small ghost">Refresh</button>
-          </div>
-          <div style="margin-top:12px" class="table-wrap">
-            <table style="width:100%;border-collapse:collapse">
-              <thead><tr style="background:#fafafa"><th style="padding:10px">ID</th><th>Invoice No</th><th>Date</th><th>Customer</th><th style="text-align:right">Total</th><th>Actions</th></tr></thead>
-              <tbody id="invoicesTbody"></tbody>
-            </table>
-          </div>
-        </section>
+          <!-- Create Invoice -->
+          <section id="view-create" class="card hidden">
+            <h2>Create Invoice</h2>
 
-        <!-- Printable -->
-        <section id="view-print" class="card hidden">
-          <h2>Printable</h2>
-          <div class="row">
-            <input id="printId" placeholder="Invoice id" style="width:140px" />
-            <button id="openPrint" class="btn">Open</button>
-          </div>
-        </section>
-      </main>
+            <div class="row wrap" style="margin-top:10px">
+              <input id="invNo" placeholder="Invoice no (auto)" style="width:140px" />
+              <input id="invDate" type="date" style="width:170px" />
+              <input id="invCustomer" placeholder="Customer name" class="full" />
+            </div>
+
+            <div style="margin-top:12px">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <div class="muted">Products</div>
+                <div style="display:flex;gap:8px">
+                  <button id="addItem" class="btn small">+ Add</button>
+                  <button id="clearItems" class="btn small ghost">Clear</button>
+                  <button id="recalc" class="btn small ghost">Recalc</button>
+                </div>
+              </div>
+
+              <div id="items" class="items" style="margin-top:10px"></div>
+            </div>
+
+            <div class="invoice-footer" style="margin-top:12px">
+              <div style="flex:1"></div>
+              <div class="totals">
+                <div class="line"><div class="muted">Subtotal</div><div id="subtotal">0.00</div></div>
+                <div class="line"><div class="muted">Tax % <input id="taxPerc" type="number" value="0" style="width:70px;margin-left:8px" /></div><div id="taxAmt">0.00</div></div>
+                <div class="line" style="font-weight:800;font-size:16px"><div>Total</div><div id="grandTotal">0.00</div></div>
+              </div>
+            </div>
+
+            <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+              <button id="saveInvoice" class="btn">Save Invoice</button>
+              <button id="openPrintable" class="btn" style="background:#2a9d8f">Open Printable</button>
+              <div id="saveMsg" class="muted"></div>
+            </div>
+          </section>
+
+          <!-- Invoices list -->
+          <section id="view-invoices" class="card hidden">
+            <h2>Saved Invoices</h2>
+            <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+              <input id="searchInv" placeholder="Search invoice no or customer" class="full" />
+              <button id="refreshInv" class="btn small ghost">Refresh</button>
+            </div>
+            <div style="margin-top:12px" class="table-wrap">
+              <table style="width:100%;border-collapse:collapse">
+                <thead><tr style="background:#fafafa"><th style="padding:10px">ID</th><th>Invoice No</th><th>Date</th><th>Customer</th><th style="text-align:right">Total</th><th>Actions</th></tr></thead>
+                <tbody id="invoicesTbody"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- Printable -->
+          <section id="view-print" class="card hidden">
+            <h2>Printable</h2>
+            <div class="row">
+              <input id="printId" placeholder="Invoice id" style="width:140px" />
+              <button id="openPrint" class="btn">Open</button>
+            </div>
+          </section>
+
+        </main>
+      </div>
     </div>
   </div>
 
 <script>
-/* ---------- Settings ---------- */
-const API = '/api';
-const COMPANY = { name: 'JBS KNIT WEAR', gstin: '33CKAPJ7513F1ZK' };
-
 /* ---------- Small SPA navigation ---------- */
 const views = ['dashboard','transactions','create','invoices','print'];
-const btns = document.querySelectorAll('.navbtn');
-btns.forEach(b => b.addEventListener('click', () => {
-  const view = b.dataset.view;
-  showView(view);
-}));
-document.getElementById('hamb').addEventListener('click', ()=> {
-  const sb = document.getElementById('sidebar');
-  sb.style.display = (sb.style.display === 'block') ? 'none' : 'block';
-});
-
 function showView(name){
   views.forEach(v=>{
     const el = document.getElementById('view-' + v);
     if (el) el.classList.toggle('hidden', v !== name);
   });
-  // hide mobile sidebar after click
-  if (window.innerWidth < 760) document.getElementById('sidebar').style.display = 'none';
   if (name === 'dashboard') loadDashboard();
   if (name === 'invoices') loadInvoices();
 }
-showView('dashboard');
+document.querySelectorAll('.navbtn').forEach(b => b.addEventListener('click', ()=> {
+  showView(b.dataset.view);
+}));
+
+/* menu toggle */
+const menuToggle = document.getElementById('menuToggle');
+const slideMenu = document.getElementById('slideMenu');
+const menuClose = document.getElementById('menuClose');
+menuToggle.addEventListener('click', ()=> {
+  const open = slideMenu.classList.toggle('open');
+  slideMenu.setAttribute('aria-hidden', !open);
+});
+menuClose?.addEventListener('click', ()=> {
+  slideMenu.classList.remove('open');
+  slideMenu.setAttribute('aria-hidden', 'true');
+});
+document.querySelectorAll('#slideMenu .navbtn').forEach(b=>{
+  b.addEventListener('click', ()=> {
+    slideMenu.classList.remove('open');
+    slideMenu.setAttribute('aria-hidden', 'true');
+  });
+});
 
 /* ---------- API helpers ---------- */
+const API = '/api';
 async function apiGet(path){ const r = await fetch(API + path); return r.ok ? r.json() : null; }
 async function apiPost(path, body){ const r = await fetch(API + path, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); return r.json(); }
-async function apiDel(path){ const r = await fetch(API + path,{method:'DELETE'}); return r.json(); }
 
 /* ---------- Dashboard ---------- */
 async function loadDashboard(){
-  // summary
   try{
     const sum = await apiGet('/reports/summary') || { income:0, expense:0 };
     const income = Number(sum.income || 0), expense = Number(sum.expense || 0);
@@ -285,7 +283,6 @@ async function loadDashboard(){
     document.getElementById('profitVal').textContent = '₹' + (income - expense).toFixed(2);
   }catch(e){ console.warn(e); }
 
-  // recent transactions
   try{
     const tx = await apiGet('/transactions') || [];
     const tbody = document.getElementById('recentTbody');
@@ -298,7 +295,7 @@ async function loadDashboard(){
   }catch(e){ console.warn(e); }
 }
 
-/* ---------- Transactions save ---------- */
+/* ---------- Transactions ---------- */
 document.getElementById('txSave').addEventListener('click', async ()=>{
   const type = document.getElementById('txType').value;
   const category = document.getElementById('txCat').value;
@@ -309,7 +306,7 @@ document.getElementById('txSave').addEventListener('click', async ()=>{
   if (res && res.id) { alert('Saved'); document.getElementById('txCat').value=''; document.getElementById('txAmount').value=''; loadDashboard(); } else alert('Save failed');
 });
 
-/* ---------- Opening balance save/load (localStorage) ---------- */
+/* Opening balance localStorage */
 const openingInput = document.getElementById('opening');
 document.getElementById('setOpening').addEventListener('click', ()=> {
   const v = parseFloat(openingInput.value);
@@ -323,9 +320,8 @@ document.getElementById('clearOpening').addEventListener('click', ()=> {
   alert('Opening cleared'); loadDashboard();
 });
 
-/* ---------- Invoice items responsive UI ---------- */
+/* ---------- Invoice items UI ---------- */
 const itemsEl = document.getElementById('items');
-
 function makeItem(index, data={}){
   const wrapper = document.createElement('div');
   wrapper.className = 'item-row';
@@ -377,14 +373,8 @@ function reindexItems(){
   Array.from(itemsEl.children).forEach((c,i)=> c.querySelector('.sno').textContent = i+1);
 }
 
-function addItem(data){
-  itemsEl.appendChild(makeItem(itemsEl.children.length, data||{}));
-  calcTotals();
-}
-
-function clearAllItems(){
-  itemsEl.innerHTML=''; for(let i=0;i<6;i++) addItem(); calcTotals();
-}
+function addItem(data){ itemsEl.appendChild(makeItem(itemsEl.children.length, data||{})); calcTotals(); }
+function clearAllItems(){ itemsEl.innerHTML=''; for(let i=0;i<6;i++) addItem(); calcTotals(); }
 
 document.getElementById('addItem').addEventListener('click', ()=> addItem());
 document.getElementById('clearItems').addEventListener('click', ()=> { if(confirm('Clear items?')) clearAllItems(); });
@@ -451,7 +441,7 @@ document.getElementById('openPrintable').addEventListener('click', ()=>{
 
 /* ---------- Invoices list ---------- */
 async function loadInvoices(){
-  const q = document.getElementById('searchInv').value.trim();
+  const q = document.getElementById('searchInv')?.value.trim();
   const url = q ? ('/api/invoices?q=' + encodeURIComponent(q)) : '/api/invoices';
   const list = await apiGet(url) || [];
   const tbody = document.getElementById('invoicesTbody');
@@ -463,9 +453,9 @@ async function loadInvoices(){
   });
 }
 function openPrintable(id){ window.open('/invoice-template.html?id=' + encodeURIComponent(id), '_blank'); }
-document.getElementById('refreshInv').addEventListener('click', ()=> loadInvoices());
+document.getElementById('refreshInv')?.addEventListener('click', ()=> loadInvoices());
 
-/* ---------- Init defaults ---------- */
+/* ---------- Init ---------- */
 function init(){
   document.getElementById('invDate').value = new Date().toISOString().slice(0,10);
   clearAllItems();
@@ -474,7 +464,6 @@ function init(){
   loadInvoices();
 }
 init();
-
 </script>
 </body>
 </html>

@@ -10,7 +10,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
-  /* A4 print-friendly container */
   body{font-family: "Helvetica Neue", Arial, sans-serif; background:#f4f6f8; margin:0; padding:20px}
   .print-wrapper{max-width:900px;margin:12px auto}
   .controls{display:flex;gap:8px;justify-content:flex-end;margin-bottom:8px}
@@ -31,6 +30,7 @@
   .totals .line{display:flex;justify-content:space-between;padding:6px 0}
   .invoice-photo{max-width:100%;height:auto;border:1px solid #eee;border-radius:6px;margin-top:8px;cursor:pointer}
   .small-muted{font-size:12px;color:#666}
+  .center{text-align:center}
   @media print {
     body{background:#fff}
     .controls{display:none}
@@ -53,9 +53,7 @@
             <div class="small-muted">Ph : 97919 02205</div>
           </div>
           <div style="flex:1"></div>
-          <div style="text-align:right">
-            <!-- optionally company small text -->
-          </div>
+          <div style="text-align:right"></div>
         </div>
 
         <h1 id="companyName">JBS KNIT WEAR</h1>
@@ -105,88 +103,116 @@
         </div>
       </div>
 
-      <!-- optional invoice photo -->
       <div id="photoWrap" style="margin-top:10px"></div>
     </div>
   </div>
 
 <script>
 (async function(){
-  // helper to get query param
   function qs(name){ const p = new URLSearchParams(location.search); return p.get(name); }
-
   const id = qs('id');
+
+  function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
   if (!id) {
     document.getElementById('itemsBody').innerHTML = '<tr><td colspan="6" class="small-muted center">No invoice id provided.</td></tr>';
     return;
   }
 
-  // fetch invoice from your API
-  try {
-    const res = await fetch('/api/invoices/' + encodeURIComponent(id));
-    if (!res.ok) throw new Error('Invoice not found (' + res.status + ')');
-    const data = await res.json();
-
-    // expected invoice shape: { id, invoice_no, date, customer_name, subtotal, tax, total, items: [...] }
-    // fill header
-    document.getElementById('invoiceNo').textContent = data.invoice_no || data.id || '—';
-    document.getElementById('invoiceDate').textContent = data.date || data.created_at || '';
-    document.getElementById('invoiceRef').textContent = data.reference || data.reference_no || '';
-    document.getElementById('customerName').textContent = data.customer_name || data.customer || '—';
-    document.getElementById('companyName').textContent = data.company_name || 'JBS KNIT WEAR';
-    document.getElementById('companyAddr').textContent = data.company_address || '3(2)/2B, Nesavalar Colony 2nd Street, P.N.Road, Tirupur - 641 602.';
-    document.getElementById('companyGST').textContent = data.company_gst || '33CKAPJ7513F1ZK';
-    document.getElementById('printedAt').textContent = new Date().toLocaleString();
-
-    // items
-    const items = data.items || [];
-    const tbody = document.getElementById('itemsBody');
-    tbody.innerHTML = '';
-    if (!items.length) {
-      tbody.innerHTML = '<tr><td colspan="6" class="small-muted center">No items</td></tr>';
-    } else {
-      items.forEach((it,i)=>{
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td class="center">${i+1}</td>
-          <td>${escapeHtml(it.description || it.particulars || '')}</td>
-          <td class="center">${Number(it.qty || it.quantity || it.qty || 0)}</td>
-          <td class="right">${Number(it.unit_price || it.rate || 0).toFixed(2)}</td>
-          <td class="right">${(it.discount||0)}${it.discount ? '%' : ''}</td>
-          <td class="right">${Number(it.line_total || it.amount || ( (it.qty||0) * (it.unit_price||0) )).toFixed(2)}</td>`;
-        tbody.appendChild(tr);
-      });
+  // robust fetch: try multiple endpoints and show diagnostics
+  async function fetchInvoiceById(id) {
+    const tries = [
+      `/api/invoices/${encodeURIComponent(id)}`,
+      `/api/invoice/${encodeURIComponent(id)}`,
+      `/invoices/${encodeURIComponent(id)}`,
+      `/api/invoices?id=${encodeURIComponent(id)}`
+    ];
+    let lastError = null;
+    for (const url of tries) {
+      try {
+        console.info('Trying invoice URL:', url);
+        const r = await fetch(url, {cache: 'no-store'});
+        if (r.ok) {
+          const json = await r.json();
+          return { url, data: json };
+        } else {
+          const txt = await r.text().catch(()=> '');
+          lastError = { url, status: r.status, text: txt };
+          console.warn('Attempt failed', lastError);
+        }
+      } catch (err) {
+        lastError = { url, err: err.message || String(err) };
+        console.error('Fetch error', lastError);
+      }
     }
-
-    // totals
-    const subtotal = Number(data.subtotal || items.reduce((s,it)=>s + Number(it.line_total||it.amount||0),0));
-    const taxTotal = Number(data.tax || 0);
-    const grand = Number(data.total || subtotal + taxTotal);
-    document.getElementById('subtotal').textContent = '₹' + subtotal.toFixed(2);
-    document.getElementById('taxTotal').textContent = '₹' + taxTotal.toFixed(2);
-    document.getElementById('grandTotal').textContent = '₹' + grand.toFixed(2);
-
-    // in words (simple)
-    document.getElementById('inWords').textContent = toWordsIndian(Math.round(grand)) + ' only';
-
-    // optional photo
-    if (data.photo_url) {
-      const wrap = document.getElementById('photoWrap');
-      const img = document.createElement('img');
-      img.className = 'invoice-photo';
-      img.src = data.photo_url;
-      img.alt = 'Invoice photo';
-      wrap.appendChild(img);
-    }
-
-  } catch (err) {
-    console.error(err);
-    document.getElementById('itemsBody').innerHTML = '<tr><td colspan="6" class="small-muted center">Failed to load invoice: '+ escapeHtml(err.message) +'</td></tr>';
+    return { error: lastError || {msg: 'unknown'} };
   }
 
-  // helper escape
-  function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  const probe = await fetchInvoiceById(id);
+  if (probe.error) {
+    const err = probe.error;
+    console.error('Invoice load failed:', err);
+    document.getElementById('itemsBody').innerHTML =
+      `<tr><td colspan="6" class="small-muted center">Failed to load invoice: ${escapeHtml(err.status ? 'Invoice not found ('+err.status+')' : (err.err || err.text || JSON.stringify(err)) )}</td></tr>`;
+    const meta = document.getElementById('invoiceRef');
+    if (meta) meta.textContent = (err.url ? `Tried: ${err.url}` : 'No URL attempted');
+    return;
+  }
 
-  // convert number to Indian words (simple utility)
+  const data = probe.data;
+  // adapt if server wrapped invoice (common shapes)
+  const inv = data.invoice || data.data || data || {};
+  // If list returned (query style) and first element exists
+  if (Array.isArray(inv) && inv.length) inv = inv[0];
+
+  document.getElementById('invoiceNo').textContent = inv.invoice_no || inv.id || '—';
+  document.getElementById('invoiceDate').textContent = inv.date || inv.created_at || '';
+  document.getElementById('invoiceRef').textContent = inv.reference || inv.reference_no || '';
+  document.getElementById('customerName').textContent = inv.customer_name || inv.customer || '—';
+  document.getElementById('companyName').textContent = inv.company_name || 'JBS KNIT WEAR';
+  document.getElementById('companyAddr').textContent = inv.company_address || '3(2)/2B, Nesavalar Colony 2nd Street, P.N.Road, Tirupur - 641 602.';
+  document.getElementById('companyGST').textContent = inv.company_gst || '33CKAPJ7513F1ZK';
+  document.getElementById('printedAt').textContent = new Date().toLocaleString();
+
+  const items = inv.items || [];
+  const tbody = document.getElementById('itemsBody');
+  tbody.innerHTML = '';
+  if (!items.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="small-muted center">No items</td></tr>';
+  } else {
+    items.forEach((it,i)=>{
+      const qty = Number(it.qty || it.quantity || 0);
+      const rate = Number(it.unit_price || it.rate || 0);
+      const discount = it.discount || 0;
+      const line = Number(it.line_total || it.amount || (qty * rate * (1 - (discount/100))) || 0).toFixed(2);
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td class="center">${i+1}</td>
+        <td>${escapeHtml(it.description || it.particulars || '')}</td>
+        <td class="center">${qty}</td>
+        <td class="right">${rate.toFixed(2)}</td>
+        <td class="right">${discount}${discount ? '%' : ''}</td>
+        <td class="right">${line}</td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  const subtotal = Number(inv.subtotal || items.reduce((s,it)=> s + Number(it.line_total || it.amount || 0),0)) || 0;
+  const taxTotal = Number(inv.tax || 0);
+  const grand = Number(inv.total || subtotal + taxTotal) || 0;
+  document.getElementById('subtotal').textContent = '₹' + subtotal.toFixed(2);
+  document.getElementById('taxTotal').textContent = '₹' + taxTotal.toFixed(2);
+  document.getElementById('grandTotal').textContent = '₹' + grand.toFixed(2);
+  document.getElementById('inWords').textContent = toWordsIndian(Math.round(grand)) + ' only';
+
+  if (inv.photo_url || inv.image) {
+    const wrap = document.getElementById('photoWrap');
+    const img = document.createElement('img');
+    img.className = 'invoice-photo';
+    img.src = inv.photo_url || inv.image;
+    img.alt = 'Invoice photo';
+    wrap.appendChild(img);
+  }
+
   function toWordsIndian(num){
     if (!Number.isFinite(num)) return '';
     const digits = ['', 'one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen'];
@@ -197,59 +223,47 @@
       if (n<1000) return digits[Math.floor(n/100)] + ' hundred' + (n%100 ? ' and ' + inWords(n%100) : '');
       return '';
     }
-    const crore = Math.floor(num/10000000); num%=10000000;
-    const lakh = Math.floor(num/100000); num%=100000;
-    const thousand = Math.floor(num/1000); num%=1000;
-    const hundreds = num;
+    let n = num;
+    const crore = Math.floor(n/10000000); n%=10000000;
+    const lakh = Math.floor(n/100000); n%=100000;
+    const thousand = Math.floor(n/1000); n%=1000;
+    const hundreds = n;
     let parts = [];
     if (crore) parts.push(inWords(crore) + ' crore');
     if (lakh) parts.push(inWords(lakh) + ' lakh');
     if (thousand) parts.push(inWords(thousand) + ' thousand');
     if (hundreds) parts.push(inWords(hundreds));
     if (!parts.length) return 'Zero';
-    // capitalize first letter:
     const s = parts.join(' ');
     return s.charAt(0).toUpperCase() + s.slice(1);
   }
 
-  /* ---------- Download PDF logic ---------- */
+  /* ---------- PDF download logic ---------- */
   document.getElementById('downloadPdfBtn').addEventListener('click', async function(){
     const btn = this;
     btn.disabled = true;
     btn.textContent = 'Preparing...';
-    try {
-      await exportElementToPDF('#printArea', `invoice-${id}.pdf`);
-    } catch (e) {
-      alert('PDF export failed: ' + (e.message || e));
-      console.error(e);
-    } finally {
-      btn.disabled = false;
-      btn.textContent = 'Download PDF';
-    }
+    try { await exportElementToPDF('#printArea', `invoice-${encodeURIComponent(id)}.pdf`); }
+    catch (e){ alert('PDF export failed: '+(e.message||e)); console.error(e); }
+    finally { btn.disabled = false; btn.textContent = 'Download PDF'; }
   });
 
   async function exportElementToPDF(selector, filename){
     const el = document.querySelector(selector);
     if (!el) throw new Error('Printable element not found');
-
-    // temporarily enlarge for better quality
-    const scale = 2; // increase to 3 for higher resolution (bigger files)
+    const scale = 2;
     const canvas = await html2canvas(el, { scale: scale, useCORS:true, logging:false, windowWidth:el.scrollWidth, windowHeight:el.scrollHeight });
-
     const imgData = canvas.toDataURL('image/jpeg', 0.98);
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
-
-    // convert px to mm (assuming 96dpi)
     const pxToMm = px => px * 25.4 / 96;
     const imgWidthMm = pxToMm(canvas.width);
     const imgHeightMm = pxToMm(canvas.height);
     const ratio = pageWidth / imgWidthMm;
     let y = 0;
     pdf.addImage(imgData, 'JPEG', 0, y, pageWidth, imgHeightMm * ratio);
-    // if image taller than page, split into pages
     let heightLeft = imgHeightMm * ratio - pageHeight;
     while (heightLeft > 0) {
       pdf.addPage();
@@ -259,6 +273,15 @@
     }
     pdf.save(filename);
   }
+
+  // clickable image to open full size
+  document.addEventListener('click', function (e) {
+    const t = e.target;
+    if (t.classList && t.classList.contains('invoice-photo')) {
+      const src = t.getAttribute('src') || t.dataset.src;
+      if (src) window.open(src, '_blank');
+    }
+  });
 
 })();
 </script>
