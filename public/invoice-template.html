@@ -1,186 +1,265 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Invoice - JBS KNIT WEAR</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Invoice — JBS KNIT WEAR</title>
+
+<!-- html2canvas + jsPDF CDN (for Download PDF) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 <style>
-  body { font-family: 'Times New Roman', serif; margin: 20px; }
-  .invoice-box {
-    max-width: 800px;
-    margin: auto;
-    border: 1px solid #000;
-    padding: 20px 25px;
+  /* A4 print-friendly container */
+  body{font-family: "Helvetica Neue", Arial, sans-serif; background:#f4f6f8; margin:0; padding:20px}
+  .print-wrapper{max-width:900px;margin:12px auto}
+  .controls{display:flex;gap:8px;justify-content:flex-end;margin-bottom:8px}
+  .btn{background:#0b79ff;color:#fff;padding:8px 12px;border:0;border-radius:8px;cursor:pointer;font-weight:700}
+  .btn.ghost{background:#fff;color:#0b79ff;border:1px solid #dfe9ff}
+  .print-container{background:#fff;padding:18px;border:1px solid #222;box-sizing:border-box}
+  .inv-header{text-align:center;margin-bottom:10px}
+  .inv-header h1{margin:0;font-size:28px;letter-spacing:1px}
+  .inv-addr{font-size:13px;color:#222;margin-top:6px}
+  .meta{display:flex;justify-content:space-between;margin:12px 0;font-size:14px}
+  .meta .left,.meta .right{width:48%}
+  .meta .right{text-align:right}
+  table.items{width:100%;border-collapse:collapse;margin-top:8px}
+  table.items th, table.items td{border:1px solid #000;padding:8px;font-size:13px}
+  table.items th{background:#f6f6f6}
+  .totals{display:flex;justify-content:flex-end;margin-top:12px}
+  .totals .box{width:320px}
+  .totals .line{display:flex;justify-content:space-between;padding:6px 0}
+  .invoice-photo{max-width:100%;height:auto;border:1px solid #eee;border-radius:6px;margin-top:8px;cursor:pointer}
+  .small-muted{font-size:12px;color:#666}
+  @media print {
+    body{background:#fff}
+    .controls{display:none}
+    .print-container{border:none}
   }
-  h1, h2, h3, h4, h5, h6 { margin: 0; padding: 0; }
-  .header {
-    text-align: center;
-    border-bottom: 1px solid #000;
-    padding-bottom: 8px;
-  }
-  .header .top-row { display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px; }
-  .header h2 { font-size: 24px; text-transform: uppercase; font-weight: bold; }
-  .header .addr { font-size:12px; margin-top:4px; }
-
-  .details { margin-top: 10px; display: flex; justify-content:space-between; font-size:14px; }
-  .details div { width: 48%; }
-
-  table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-  th, td {
-    border: 1px solid #000;
-    padding: 5px;
-    font-size: 14px;
-  }
-  th { text-align: center; background: #f5f5f5; }
-  td:nth-child(1) { text-align: center; width: 5%; }
-  td:nth-child(3), td:nth-child(4), td:nth-child(5) { text-align: right; }
-
-  .total {
-    text-align: right;
-    margin-top: 8px;
-    font-size: 16px;
-    font-weight: bold;
-  }
-
-  .footer {
-    margin-top: 40px;
-    display: flex;
-    justify-content: space-between;
-    font-size: 14px;
-  }
-  .footer .amount { width: 65%; }
-  .footer .sign { text-align: right; width: 30%; }
 </style>
 </head>
 <body>
-  <div class="invoice-box">
-    <div class="header">
-      <div class="top-row">
-        <div>JAMES<br>Ph : 97919 02205</div>
-        
-      </div>
-      <h2>JBS KNIT WEAR</h2>
-      <div class="addr">3(2)/2B, Nesavalar Colony 2nd Street, P.N.Road, Tirupur - 641 602.</div>
-      <div style="margin-top:6px;"><strong>GSTIN NUMBER:</strong> 33CKAPJ7513F1ZK</div>
+  <div class="print-wrapper">
+    <div class="controls no-print">
+      <button id="downloadPdfBtn" class="btn">Download PDF</button>
+      <button id="printBtn" class="btn ghost" onclick="window.print()">Print</button>
     </div>
 
-    <div class="details">
-      <div class="left">
-        <div><strong>No:</strong> <span id="invNo">—</span></div>
-        <div style="margin-top:6px;"><strong>To M/s:</strong> <span id="customerName">..............................................</span></div>
-      </div>
-      <div class="right" style="text-align:right;">
-        <div><strong>Date:</strong> <span id="invDate"></span></div>
-        <div style="margin-top:18px; font-size:12px;">&nbsp;</div>
-      </div>
-    </div>
+    <div id="printArea" class="print-container">
+      <div class="inv-header">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div style="text-align:left">
+            <div style="font-weight:700">JAMES</div>
+            <div class="small-muted">Ph : 97919 02205</div>
+          </div>
+          <div style="flex:1"></div>
+          <div style="text-align:right">
+            <!-- optionally company small text -->
+          </div>
+        </div>
 
-    <table id="itemsTable">
-      <thead>
-        <tr>
-          <th>S.No</th>
-          <th>Particulars</th>
-          <th>Qty</th>
-          <th>Rate (Rs)</th>
-          <th>Amount (Rs)</th>
-        </tr>
-      </thead>
-      <tbody>
-        <!-- filled dynamically -->
-      </tbody>
-    </table>
-
-    <div class="total">
-      Total: ₹<span id="totalAmount">0.00</span>
-    </div>
-
-    <div class="footer">
-      <div class="amount">
-        <p>Rupees: <span id="amountWords">......................................................</span></p>
+        <h1 id="companyName">JBS KNIT WEAR</h1>
+        <div class="inv-addr" id="companyAddr">3(2)/2B, Nesavalar Colony 2nd Street, P.N.Road, Tirupur - 641 602.</div>
+        <div style="font-weight:700;margin-top:6px">GSTIN NUMBER: <span id="companyGST">33CKAPJ7513F1ZK</span></div>
       </div>
-      <div class="sign">
-        <p>For <strong>JBS KNIT WEAR</strong></p>
-        <br><br>
-        <p>Authorized Signatory</p>
+
+      <hr />
+
+      <div class="meta">
+        <div class="left">
+          <div><strong>No:</strong> <span id="invoiceNo">—</span></div>
+          <div style="margin-top:6px"><strong>To M/s:</strong> <span id="customerName">—</span></div>
+          <div class="small-muted" style="margin-top:8px" id="customerAddr"></div>
+        </div>
+        <div class="right">
+          <div><strong>Date:</strong> <span id="invoiceDate">—</span></div>
+          <div style="margin-top:6px"><strong>Reference:</strong> <span id="invoiceRef">—</span></div>
+          <div style="margin-top:6px" class="small-muted">Printed: <span id="printedAt"></span></div>
+        </div>
       </div>
+
+      <table class="items" id="itemsTable">
+        <thead>
+          <tr><th style="width:6%">S.No</th><th>Particulars</th><th style="width:10%">Qty</th><th style="width:12%">Rate (Rs)</th><th style="width:12%">Discount</th><th style="width:14%">Amount (Rs)</th></tr>
+        </thead>
+        <tbody id="itemsBody">
+          <!-- rows inserted here -->
+        </tbody>
+      </table>
+
+      <div class="totals" style="margin-top:18px">
+        <div class="box">
+          <div class="line"><div class="small-muted">Subtotal:</div><div id="subtotal">₹0.00</div></div>
+          <div class="line"><div class="small-muted">Tax:</div><div id="taxTotal">₹0.00</div></div>
+          <div class="line" style="font-weight:800;font-size:16px"><div>Total:</div><div id="grandTotal">₹0.00</div></div>
+        </div>
+      </div>
+
+      <div style="margin-top:40px;display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div>Rupees: <span id="inWords">Rupees Only</span></div>
+        </div>
+        <div style="text-align:right">
+          <div>For <strong id="companyShort">JBS KNIT WEAR</strong></div>
+          <div style="margin-top:40px">Authorized Signatory</div>
+        </div>
+      </div>
+
+      <!-- optional invoice photo -->
+      <div id="photoWrap" style="margin-top:10px"></div>
     </div>
   </div>
 
 <script>
-/* If you pass an invoice id via ?id=... this page can fetch details from /api/invoices/:id
-   But if you simply open this page directly, use the example data below. */
-
-function getQuery(name) {
-  const p = new URLSearchParams(window.location.search);
-  return p.get(name);
-}
-
-async function loadInvoiceFromApi(id) {
-  const r = await fetch('/api/invoices/' + encodeURIComponent(id));
-  if (!r.ok) throw new Error('Invoice not found');
-  return r.json();
-}
-
-async function renderInvoice(invoice) {
-  document.getElementById('invNo').textContent = invoice.invoice_no || invoice.id || '—';
-  document.getElementById('invDate').textContent = invoice.date || new Date().toISOString().slice(0,10);
-  document.getElementById('customerName').textContent = invoice.customer_name || invoice.customer || '—';
-  const tbody = document.querySelector('#itemsTable tbody');
-  tbody.innerHTML = '';
-  let total = 0;
-  (invoice.items || []).forEach((it, i) => {
-    const amt = (it.line_total !== undefined) ? it.line_total : ((it.qty||0) * (it.unit_price||0));
-    total += amt;
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${i+1}</td>
-                    <td>${it.description || ''}</td>
-                    <td>${it.qty || ''}</td>
-                    <td style="text-align:right">${(it.unit_price||0).toFixed(2)}</td>
-                    <td style="text-align:right">${Number(amt).toFixed(2)}</td>`;
-    tbody.appendChild(tr);
-  });
-  document.getElementById('totalAmount').textContent = Number(total).toFixed(2);
-  // amount in words - reuse a simple converter (keeps short for printing)
-  function numberToWords(num) {
-    const a = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten',
-               'Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
-    const b = ['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
-    if ((num = num.toString()).length > 9) return 'Overflow';
-    let n = ('000000000' + num).substr(-9).match(/^(\d{2})(\d{2})(\d{2})(\d{1})(\d{2})$/);
-    if (!n) return; let str = '';
-    str += (n[1] != 0) ? (a[Number(n[1])] || b[n[1][0]] + ' ' + a[n[1][1]]) + ' Crore ' : '';
-    str += (n[2] != 0) ? (a[Number(n[2])] || b[n[2][0]] + ' ' + a[n[2][1]]) + ' Lakh ' : '';
-    str += (n[3] != 0) ? (a[Number(n[3])] || b[n[3][0]] + ' ' + a[n[3][1]]) + ' Thousand ' : '';
-    str += (n[4] != 0) ? (a[Number(n[4])] || b[n[4][0]] + ' ' + a[n[4][1]]) + ' Hundred ' : '';
-    str += (n[5] != 0) ? ((str != '') ? 'and ' : '') + (a[Number(n[5])] || b[n[5][0]] + ' ' + a[n[5][1]]) + ' Rupees Only' : 'Rupees Only';
-    return str;
-  }
-  document.getElementById('amountWords').textContent = numberToWords(Math.round(total));
-}
-
 (async function(){
-  const id = getQuery('id');
-  if (id) {
-    try {
-      const invoice = await loadInvoiceFromApi(id);
-      await renderInvoice(invoice);
-    } catch (e) {
-      console.error(e);
-      // fallback sample
-      renderInvoice({
-        invoice_no: '—',
-        date: new Date().toISOString().slice(0,10),
-        items: []
+  // helper to get query param
+  function qs(name){ const p = new URLSearchParams(location.search); return p.get(name); }
+
+  const id = qs('id');
+  if (!id) {
+    document.getElementById('itemsBody').innerHTML = '<tr><td colspan="6" class="small-muted center">No invoice id provided.</td></tr>';
+    return;
+  }
+
+  // fetch invoice from your API
+  try {
+    const res = await fetch('/api/invoices/' + encodeURIComponent(id));
+    if (!res.ok) throw new Error('Invoice not found (' + res.status + ')');
+    const data = await res.json();
+
+    // expected invoice shape: { id, invoice_no, date, customer_name, subtotal, tax, total, items: [...] }
+    // fill header
+    document.getElementById('invoiceNo').textContent = data.invoice_no || data.id || '—';
+    document.getElementById('invoiceDate').textContent = data.date || data.created_at || '';
+    document.getElementById('invoiceRef').textContent = data.reference || data.reference_no || '';
+    document.getElementById('customerName').textContent = data.customer_name || data.customer || '—';
+    document.getElementById('companyName').textContent = data.company_name || 'JBS KNIT WEAR';
+    document.getElementById('companyAddr').textContent = data.company_address || '3(2)/2B, Nesavalar Colony 2nd Street, P.N.Road, Tirupur - 641 602.';
+    document.getElementById('companyGST').textContent = data.company_gst || '33CKAPJ7513F1ZK';
+    document.getElementById('printedAt').textContent = new Date().toLocaleString();
+
+    // items
+    const items = data.items || [];
+    const tbody = document.getElementById('itemsBody');
+    tbody.innerHTML = '';
+    if (!items.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="small-muted center">No items</td></tr>';
+    } else {
+      items.forEach((it,i)=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td class="center">${i+1}</td>
+          <td>${escapeHtml(it.description || it.particulars || '')}</td>
+          <td class="center">${Number(it.qty || it.quantity || it.qty || 0)}</td>
+          <td class="right">${Number(it.unit_price || it.rate || 0).toFixed(2)}</td>
+          <td class="right">${(it.discount||0)}${it.discount ? '%' : ''}</td>
+          <td class="right">${Number(it.line_total || it.amount || ( (it.qty||0) * (it.unit_price||0) )).toFixed(2)}</td>`;
+        tbody.appendChild(tr);
       });
     }
-  } else {
-    // no id: show blank sample
-    renderInvoice({
-      invoice_no: '—',
-      date: new Date().toISOString().slice(0,10),
-      items: []
-    });
+
+    // totals
+    const subtotal = Number(data.subtotal || items.reduce((s,it)=>s + Number(it.line_total||it.amount||0),0));
+    const taxTotal = Number(data.tax || 0);
+    const grand = Number(data.total || subtotal + taxTotal);
+    document.getElementById('subtotal').textContent = '₹' + subtotal.toFixed(2);
+    document.getElementById('taxTotal').textContent = '₹' + taxTotal.toFixed(2);
+    document.getElementById('grandTotal').textContent = '₹' + grand.toFixed(2);
+
+    // in words (simple)
+    document.getElementById('inWords').textContent = toWordsIndian(Math.round(grand)) + ' only';
+
+    // optional photo
+    if (data.photo_url) {
+      const wrap = document.getElementById('photoWrap');
+      const img = document.createElement('img');
+      img.className = 'invoice-photo';
+      img.src = data.photo_url;
+      img.alt = 'Invoice photo';
+      wrap.appendChild(img);
+    }
+
+  } catch (err) {
+    console.error(err);
+    document.getElementById('itemsBody').innerHTML = '<tr><td colspan="6" class="small-muted center">Failed to load invoice: '+ escapeHtml(err.message) +'</td></tr>';
   }
+
+  // helper escape
+  function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  // convert number to Indian words (simple utility)
+  function toWordsIndian(num){
+    if (!Number.isFinite(num)) return '';
+    const digits = ['', 'one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen'];
+    const tens = ['', '', 'twenty','thirty','forty','fifty','sixty','seventy','eighty','ninety'];
+    function inWords(n){
+      if (n<20) return digits[n];
+      if (n<100) return tens[Math.floor(n/10)] + (n%10 ? ' '+digits[n%10] : '');
+      if (n<1000) return digits[Math.floor(n/100)] + ' hundred' + (n%100 ? ' and ' + inWords(n%100) : '');
+      return '';
+    }
+    const crore = Math.floor(num/10000000); num%=10000000;
+    const lakh = Math.floor(num/100000); num%=100000;
+    const thousand = Math.floor(num/1000); num%=1000;
+    const hundreds = num;
+    let parts = [];
+    if (crore) parts.push(inWords(crore) + ' crore');
+    if (lakh) parts.push(inWords(lakh) + ' lakh');
+    if (thousand) parts.push(inWords(thousand) + ' thousand');
+    if (hundreds) parts.push(inWords(hundreds));
+    if (!parts.length) return 'Zero';
+    // capitalize first letter:
+    const s = parts.join(' ');
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+
+  /* ---------- Download PDF logic ---------- */
+  document.getElementById('downloadPdfBtn').addEventListener('click', async function(){
+    const btn = this;
+    btn.disabled = true;
+    btn.textContent = 'Preparing...';
+    try {
+      await exportElementToPDF('#printArea', `invoice-${id}.pdf`);
+    } catch (e) {
+      alert('PDF export failed: ' + (e.message || e));
+      console.error(e);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Download PDF';
+    }
+  });
+
+  async function exportElementToPDF(selector, filename){
+    const el = document.querySelector(selector);
+    if (!el) throw new Error('Printable element not found');
+
+    // temporarily enlarge for better quality
+    const scale = 2; // increase to 3 for higher resolution (bigger files)
+    const canvas = await html2canvas(el, { scale: scale, useCORS:true, logging:false, windowWidth:el.scrollWidth, windowHeight:el.scrollHeight });
+
+    const imgData = canvas.toDataURL('image/jpeg', 0.98);
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+
+    // convert px to mm (assuming 96dpi)
+    const pxToMm = px => px * 25.4 / 96;
+    const imgWidthMm = pxToMm(canvas.width);
+    const imgHeightMm = pxToMm(canvas.height);
+    const ratio = pageWidth / imgWidthMm;
+    let y = 0;
+    pdf.addImage(imgData, 'JPEG', 0, y, pageWidth, imgHeightMm * ratio);
+    // if image taller than page, split into pages
+    let heightLeft = imgHeightMm * ratio - pageHeight;
+    while (heightLeft > 0) {
+      pdf.addPage();
+      y = - (pageHeight) * ( ( (imgHeightMm * ratio) - heightLeft) / (imgHeightMm * ratio) );
+      pdf.addImage(imgData, 'JPEG', 0, y, pageWidth, imgHeightMm * ratio);
+      heightLeft -= pageHeight;
+    }
+    pdf.save(filename);
+  }
+
 })();
 </script>
 </body>
