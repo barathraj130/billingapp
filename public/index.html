@@ -10,10 +10,12 @@
     --bg:#f5f7fb;
     --sidebar:#fff;
     --card:#ffffff;
-    --muted:#8b98a6;
+    --muted:#7b8794;
     --accent:#1976ff;
+    --accent-2:#0b72e6;
+    --danger:#ff6b4a;
     --radius:12px;
-    --shadow: 0 8px 20px rgba(20,30,50,0.06);
+    --shadow: 0 10px 30px rgba(20,30,50,0.06);
     --container-max:1200px;
   }
   html,body{height:100%;margin:0;font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;}
@@ -29,7 +31,7 @@
   background:transparent;
   position:sticky;
   top:0;
-  z-index:20;
+  z-index:60;
 }
 
 /* App title left */
@@ -37,12 +39,15 @@
 .brand .title{font-weight:800;font-size:18px;letter-spacing:0.2px}
 .small-note{color:var(--muted);font-size:12px}
 
+/* hamburger for mobile */
+.hamburger{display:none;border:0;background:transparent;font-size:20px;cursor:pointer}
+
 /* Wrapper with left sidebar and main content */
 .wrapper{display:flex;min-height:calc(100vh - 68px);}
 
 /* Sidebar */
 .sidebar{
-  width:230px;
+  width:240px;
   background:var(--sidebar);
   padding:28px 18px;
   box-shadow: 0 2px 8px rgba(20,30,50,0.03);
@@ -51,12 +56,16 @@
   position:sticky;
   top:68px;
   height: calc(100vh - 68px);
+  overflow:auto;
+  transition:transform .18s ease;
+  z-index:40;
 }
+.sidebar.hidden{transform:translateX(-120%);}
 .logo{font-weight:800;margin-bottom:18px}
 .nav{display:flex;flex-direction:column;gap:8px}
-.nav a{display:block;padding:12px 10px;border-radius:8px;color:#111;text-decoration:none;font-weight:600}
-.nav a small{display:block;color:var(--muted);font-weight:400;font-size:12px;margin-top:2px}
-.nav a.active{background:linear-gradient(90deg,#ffffff,#fbfdff);box-shadow: 0 6px 18px rgba(20,30,50,0.04);border-left:4px solid var(--accent);padding-left:16px}
+.nav a{display:block;padding:12px 12px;border-radius:8px;color:#111;text-decoration:none;font-weight:700}
+.nav a small{display:block;color:var(--muted);font-weight:500;font-size:12px;margin-top:4px}
+.nav a.active{background:linear-gradient(90deg,#ffffff,#fbfdff);box-shadow: 0 6px 18px rgba(20,30,50,0.04);border-left:4px solid var(--accent);padding-left:12px}
 
 /* Layout container (content + right panel) */
 .container{
@@ -64,7 +73,7 @@
   width:100%;
   max-width:var(--container-max);
   margin:20px auto;
-  grid-template-columns: 1fr 420px;
+  grid-template-columns: 1fr 440px;
   column-gap:28px;
   align-items:start;
   padding:0 18px;
@@ -72,15 +81,10 @@
 }
 
 /* main content column */
-.content{
-  min-width:0;
-}
+.content{min-width:0;padding-bottom:40px}
 
 /* right panel (invoice card area) */
-.panel{
-  min-width:0;
-  display:block;
-}
+.panel{min-width:0;display:block}
 
 /* Card style */
 .card{
@@ -92,23 +96,23 @@
   box-sizing:border-box;
 }
 
-/* Dashboard big card */
+/* typography */
 .h1{font-size:28px;font-weight:800;margin-bottom:6px}
 .h2{font-size:15px;color:var(--muted);margin-bottom:14px}
 
 /* Stats row */
-.stat-row{display:flex;gap:18px;flex-wrap:wrap}
-.stat{flex:1;min-width:180px;background:#fff;border-radius:10px;padding:18px;box-shadow:0 6px 18px rgba(20,30,50,0.03)}
+.stat-row{display:flex;gap:18px;flex-wrap:wrap;margin-top:8px}
+.stat{flex:1;min-width:190px;background:#fff;border-radius:10px;padding:18px;box-shadow:0 8px 20px rgba(20,30,50,0.03)}
 .stat .label{color:var(--muted);font-size:13px}
 .stat .value{font-weight:800;font-size:20px;margin-top:8px}
 
-/* Recent list */
-.table{margin-top:16px;border-radius:10px;overflow:hidden;background:#fff;padding:8px;border:1px solid rgba(16,24,40,0.03)}
+/* table */
+.table{margin-top:12px;border-radius:10px;overflow:hidden;background:#fff;padding:8px;border:1px solid rgba(16,24,40,0.03)}
 .table .thead{display:flex;gap:10px;padding:10px 12px;border-bottom:1px solid rgba(16,24,40,0.03)}
 .table .thead div{flex:1;font-weight:700}
 .table .row{display:flex;gap:10px;padding:12px}
 
-/* Create Invoice card specifics */
+/* Create Invoice layout */
 .invoice-card .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .input{background:#fff;border:1px solid #e6eef9;padding:10px;border-radius:8px;min-height:38px;box-sizing:border-box}
 .input.small{width:100px}
@@ -117,7 +121,7 @@
 .controls{display:flex;gap:8px;align-items:center}
 .btn{background:var(--accent);color:#fff;padding:9px 12px;border-radius:8px;border:none;cursor:pointer}
 .btn.ghost{background:#fff;border:1px solid #e7eef8;color:#111}
-.btn.warn{background:#ff8a00}
+.btn.warn{background:var(--danger);}
 
 /* Products list */
 .items{display:flex;flex-direction:column;gap:10px;margin-top:12px}
@@ -127,8 +131,8 @@
   align-items:center;
   grid-template-columns:
     48px              /* sno */
-    minmax(140px, 1fr)/* product */
-    76px              /* qty */
+    minmax(160px, 1fr)/* product */
+    80px              /* qty */
     90px              /* rate */
     64px              /* disc% */
     88px              /* amount */
@@ -141,16 +145,16 @@
   background:transparent;
 }
 
-/* footer totals */
+/* totals */
 .totals{display:flex;flex-direction:column;gap:8px;align-items:flex-end;margin-top:12px}
 .totals .line{display:flex;gap:12px;align-items:center}
 .totals .label{color:var(--muted);min-width:120px;text-align:right}
 .totals .value{font-weight:800;font-size:18px;min-width:80px;text-align:right}
 
-/* mobile / responsive rules */
+/* small screens */
 @media (max-width:980px){
-  .container{grid-template-columns: 1fr; padding-bottom:60px}
-  .sidebar{position:relative;width:100%;height:auto;border-right:0;border-bottom:1px solid rgba(16,24,40,0.03);}
+  .container{grid-template-columns: 1fr; padding-bottom:80px}
+  .sidebar{position:fixed;left:0;top:68px;height:calc(100vh - 68px);width:260px;z-index:60}
   .panel{order:2;margin-top:14px}
   .content{order:1}
   .item{
@@ -166,6 +170,8 @@
     display:flex;
     gap:8px;
   }
+  .hamburger{display:block}
+  .header{padding:0 12px}
 }
 
 /* tiny phones */
@@ -179,9 +185,12 @@
 </head>
 <body>
   <div class="header">
-    <div class="brand">
-      <div class="title">JBS KNIT WEAR — Billing</div>
-      <div class="small-note">Simple billing for retail</div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <button class="hamburger" id="hamburger" aria-label="Toggle menu">☰</button>
+      <div class="brand">
+        <div class="title">JBS KNIT WEAR — Billing</div>
+        <div class="small-note">Simple billing for retail</div>
+      </div>
     </div>
 
     <div style="display:flex;align-items:center;gap:12px">
@@ -193,15 +202,15 @@
   </div>
 
   <div class="wrapper">
-    <aside class="sidebar">
+    <aside class="sidebar" id="sidebar">
       <div class="logo">JBS KNIT WEAR — <small style="font-weight:600">Billing</small></div>
 
       <nav class="nav" aria-label="Main menu">
-        <a href="#" class="active" id="nav-dashboard">Dashboard <small>Quick totals & recent</small></a>
-        <a href="#" id="nav-trans">Transactions <small>Income & expense quick add</small></a>
-        <a href="#" id="nav-create">Create Invoice <small>Add products & save</small></a>
-        <a href="#" id="nav-invoices">Invoices <small>Saved invoices list</small></a>
-        <a href="#" id="nav-print">Printable template <small>View / print invoice</small></a>
+        <a href="#dashboard" data-view="dashboard" class="active">Dashboard <small>Quick totals & recent</small></a>
+        <a href="#transactions" data-view="transactions">Transactions <small>Income & expense quick add</small></a>
+        <a href="#create" data-view="create">Create Invoice <small>Add products & save</small></a>
+        <a href="#invoices" data-view="invoices">Invoices <small>Saved invoices list</small></a>
+        <a href="#printable" data-view="printable">Printable template <small>View / print invoice</small></a>
       </nav>
 
       <div style="margin-top:18px;color:var(--muted);font-size:13px">
@@ -210,9 +219,10 @@
     </aside>
 
     <main class="container">
-      <!-- left content -->
+      <!-- left content column with views -->
       <section class="content">
-        <div class="card">
+        <!-- Dashboard view -->
+        <div class="card" id="view-dashboard">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;">
             <div>
               <div class="h1">Billing Dashboard</div>
@@ -248,9 +258,41 @@
             <div id="recentList"></div>
           </div>
         </div>
+
+        <!-- Transactions view -->
+        <div class="card" id="view-transactions" style="display:none;margin-top:18px">
+          <div class="h1">Quick Transactions</div>
+          <div class="h2">Add income or expenses quickly</div>
+          <form id="transForm" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <select id="transType" class="input small">
+              <option value="income">Income</option>
+              <option value="expense">Expense</option>
+            </select>
+            <input id="transCategory" class="input medium" placeholder="Category" />
+            <input id="transAmount" class="input small" type="number" step="0.01" placeholder="Amount" />
+            <button id="addTransBtn" class="btn">Add</button>
+          </form>
+        </div>
+
+        <!-- Invoices list view -->
+        <div class="card" id="view-invoices" style="display:none;margin-top:18px">
+          <div class="h1">Saved Invoices</div>
+          <div class="h2">View previously saved invoices</div>
+          <div id="invoicesList" style="margin-top:8px">No saved invoices loaded.</div>
+        </div>
+
+        <!-- Printable preview view -->
+        <div class="card" id="view-printable" style="display:none;margin-top:18px">
+          <div class="h1">Printable Template</div>
+          <div class="h2">Open a printable invoice by id</div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input id="printId" class="input medium" placeholder="Invoice id" />
+            <button id="openPrintableBtn" class="btn">Open printable</button>
+          </div>
+        </div>
       </section>
 
-      <!-- right panel - invoice card -->
+      <!-- right panel - invoice card (always visible) -->
       <aside class="panel">
         <div class="card invoice-card" id="invoiceCard">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
@@ -262,6 +304,8 @@
           <div class="row" style="margin-bottom:8px">
             <input id="invoiceNo" class="input medium" placeholder="Invoice no (auto)" readonly />
             <input id="invoiceDate" class="input medium" type="date" />
+          </div>
+          <div style="margin-bottom:12px">
             <input id="customerName" class="input full" placeholder="Customer name" />
           </div>
 
@@ -276,9 +320,7 @@
           </div>
 
           <!-- items list -->
-          <div class="items" id="itemsContainer">
-            <!-- JS will populate rows -->
-          </div>
+          <div class="items" id="itemsContainer"></div>
 
           <!-- totals -->
           <div class="totals">
@@ -311,112 +353,147 @@
   </div>
 
   <script>
-  // ---------- Helpers ----------
-  const el = (id)=>document.getElementById(id);
-  const fmt = v=>Number(v||0).toFixed(2);
+  /* ---------- Utilities ---------- */
+  const $ = id => document.getElementById(id);
+  const format = v => Number(v||0).toFixed(2);
 
-  // ---------- Invoice UI logic ----------
+  /* ---------- View router / sidebar ---------- */
+  const views = ['dashboard','transactions','create','invoices','printable'];
+  function showView(name){
+    views.forEach(v=>{
+      const el = $('view-' + v);
+      if(el) el.style.display = (v === name ? '' : 'none');
+    });
+    // active link
+    document.querySelectorAll('.nav a').forEach(a=>{
+      a.classList.toggle('active', a.dataset.view === name);
+    });
+    // scroll to top of content area to keep UX consistent
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
+
+  // initialize nav links
+  document.querySelectorAll('.nav a').forEach(a=>{
+    a.addEventListener('click', function(e){
+      e.preventDefault();
+      const view = this.dataset.view || 'dashboard';
+      showView(view);
+      // on small screens close sidebar
+      if(window.innerWidth <= 980){
+        $('#sidebar').classList.add('hidden');
+      }
+    });
+  });
+
+  // hamburger toggle
+  $('#hamburger').addEventListener('click', ()=>{
+    $('#sidebar').classList.toggle('hidden');
+  });
+
+  // hide sidebar on click outside on mobile
+  document.addEventListener('click', (ev)=>{
+    if(window.innerWidth <= 980){
+      const sidebar = $('#sidebar');
+      if(!sidebar.contains(ev.target) && !$('#hamburger').contains(ev.target)) {
+        sidebar.classList.add('hidden');
+      }
+    }
+  });
+
+  /* ---------- Invoice rows & calculations ---------- */
   let items = [];
 
-  function makeRow(index, data = {}) {
+  function makeRow(i, data={}){
     const row = document.createElement('div');
     row.className = 'item';
-    row.dataset.index = index;
-
+    row.dataset.index = i;
     row.innerHTML = `
-      <div class="sno">${index+1}</div>
+      <div class="sno">${i+1}</div>
       <div><input class="prod" placeholder="Product" value="${data.product||''}" /></div>
       <div class="qty"><input type="number" min="0" step="1" class="qtyI" value="${data.qty||''}" placeholder="Qty" /></div>
       <div class="rate"><input type="number" min="0" step="0.01" class="rateI" value="${data.rate||''}" placeholder="Rate" /></div>
       <div class="disc"><input type="number" min="0" step="0.01" class="discI" value="${data.disc||0}" placeholder="Disc%" /></div>
-      <div class="amt"><input readonly class="amtI input" value="${fmt(data.amount||0)}" /></div>
+      <div class="amt"><input readonly class="amtI input" value="${format(data.amount||0)}" /></div>
       <div class="remove"><button class="btn ghost removeBtn">x</button></div>
     `;
-    attachRowHandlers(row);
-    return row;
-  }
-
-  function attachRowHandlers(row){
-    const qty = row.querySelector('.qtyI');
-    const rate = row.querySelector('.rateI');
-    const disc = row.querySelector('.discI');
-    const prod = row.querySelector('.prod');
-    const remove = row.querySelector('.removeBtn');
-    qty.addEventListener('input',()=>recalcAll());
-    rate.addEventListener('input',()=>recalcAll());
-    disc.addEventListener('input',()=>recalcAll());
-    prod.addEventListener('change',()=>{}); // placeholder
-    remove.addEventListener('click',()=>{
+    // handlers
+    row.querySelector('.qtyI').addEventListener('input', recalcAll);
+    row.querySelector('.rateI').addEventListener('input', recalcAll);
+    row.querySelector('.discI').addEventListener('input', recalcAll);
+    row.querySelector('.prod').addEventListener('change', ()=>{});
+    row.querySelector('.removeBtn').addEventListener('click', ()=>{
       const idx = Number(row.dataset.index);
       items.splice(idx,1);
       renderItems();
     });
+    return row;
   }
 
   function renderItems(){
-    const container = el('itemsContainer');
+    const container = $('itemsContainer');
     container.innerHTML = '';
-    items.forEach((d,i)=>container.appendChild(makeRow(i,d)));
+    items.forEach((it,i)=>container.appendChild(makeRow(i,it)));
     recalcAll();
   }
 
   function addProduct(data){
     items.push(data||{product:'',qty:'',rate:'',disc:0,amount:0});
     renderItems();
-    // focus last product input
-    setTimeout(()=> {
+    setTimeout(()=>{
       const last = document.querySelector('#itemsContainer .item:last-child .prod');
       if(last) last.focus();
-    },40);
+    },50);
   }
 
-  function clearProducts(){
+  function clearProductsToDefault(){
     items = [];
     for(let i=0;i<4;i++) items.push({product:'',qty:'',rate:'',disc:0,amount:0});
     renderItems();
   }
 
   function recalcAll(){
-    const container = el('itemsContainer');
-    let subtotal = 0;
+    const container = $('itemsContainer');
     const rows = container.querySelectorAll('.item');
-    rows.forEach((row,idx)=>{
-      const qty = Number(row.querySelector('.qtyI').value||0);
-      const rate = Number(row.querySelector('.rateI').value||0);
-      const disc = Number(row.querySelector('.discI').value||0);
+    let subtotal = 0;
+    rows.forEach((row, idx)=>{
+      const qty = Number(row.querySelector('.qtyI').value || 0);
+      const rate = Number(row.querySelector('.rateI').value || 0);
+      const disc = Number(row.querySelector('.discI').value || 0);
       let amount = qty * rate;
       if(disc) amount = amount * (1 - (disc/100));
       subtotal += amount;
-      row.querySelector('.amtI').value = fmt(amount);
+      row.querySelector('.amtI').value = format(amount);
       items[idx] = {
         product: row.querySelector('.prod').value||'',
         qty, rate, disc, amount
       };
     });
-    el('subtotal').innerText = fmt(subtotal);
-    const taxPct = Number(el('taxPct').value||0);
+    $('subtotal').innerText = format(subtotal);
+    const taxPct = Number($('taxPct').value || 0);
     const taxVal = subtotal * (taxPct/100);
-    el('taxVal').innerText = fmt(taxVal);
+    $('taxVal').innerText = format(taxVal);
     const total = subtotal + taxVal;
-    el('totalVal').innerText = fmt(total);
-    // update some dashboard totals (local only)
-    el('totalIncome').innerText = fmt(total);
-    el('totalExpense').innerText = fmt(0);
-    el('totalProfit').innerText = fmt(total);
+    $('totalVal').innerText = format(total);
+
+    // update small dashboard numbers so user sees immediate effect
+    $('totalIncome').innerText = format(total);
+    $('totalExpense').innerText = format(0);
+    $('totalProfit').innerText = format(total);
+    $('profitVal').innerText = format(total);
   }
 
-  // ---------- Save / Print ----------
+  /* ---------- Save / print / reset ---------- */
   async function saveInvoice(){
     recalcAll();
     const payload = {
-      invoice_no: el('invoiceNo').value || null,
-      date: el('invoiceDate').value|| new Date().toISOString().slice(0,10),
-      customer: el('customerName').value||'',
+      invoice_no: $('invoiceNo').value || null,
+      date: $('invoiceDate').value|| new Date().toISOString().slice(0,10),
+      customer: $('customerName').value||'',
       items: items.map(it=>({product:it.product, qty:it.qty, rate:it.rate, disc:it.disc, amount:it.amount})),
-      subtotal: Number(el('subtotal').innerText||0),
-      tax_pct: Number(el('taxPct').value||0),
-      tax_amount: Number(el('taxVal').innerText||0),
-      total: Number(el('totalVal').innerText||0)
+      subtotal: Number($('subtotal').innerText||0),
+      tax_pct: Number($('taxPct').value||0),
+      tax_amount: Number($('taxVal').innerText||0),
+      total: Number($('totalVal').innerText||0)
     };
 
     try{
@@ -425,94 +502,153 @@
         headers:{'Content-Type':'application/json'},
         body: JSON.stringify(payload)
       });
-      if(!res.ok) {
+      if(!res.ok){
         const text = await res.text();
         alert('Save failed: ' + (res.statusText||text));
         return;
       }
       const data = await res.json();
-      // server should return saved invoice id or invoice_no
-      el('invoiceNo').value = data.invoice_no || data.id || '';
+      $('invoiceNo').value = data.invoice_no || data.id || '';
       alert('Saved invoice id ' + (data.id || data.invoice_no || 'OK'));
+      // optionally refresh invoices list (best-effort)
+      loadInvoices();
     }catch(e){
       alert('Save error: ' + e.message);
     }
   }
 
   function printInvoice(){
-    // naive: open printable template route in new tab if server provides it
-    const id = el('invoiceNo').value;
+    const id = $('invoiceNo').value;
     if(!id){
-      alert('Please save invoice first to print (or enter invoice id).');
+      alert('Save invoice first or enter invoice id.');
       return;
     }
-    // try /invoice-template.html?id=ID
     window.open('/invoice-template.html?id=' + encodeURIComponent(id), '_blank');
   }
 
-  // ---------- opening balance ----------
+  function resetForm(){
+    const ask = prompt("Type RESET to confirm permanent wipe of form data:");
+    if(ask !== 'RESET'){
+      alert('Reset cancelled (confirmation not matched).');
+      return;
+    }
+    $('customerName').value = '';
+    $('taxPct').value = 0;
+    $('invoiceNo').value = '';
+    $('invoiceDate').value = new Date().toISOString().slice(0,10);
+    clearProductsToDefault();
+    recalcAll();
+    alert('Form reset.');
+  }
 
+  /* ---------- Quick transactions ---------- */
+  function addTransaction(){
+    const type = $('transType').value;
+    const category = $('transCategory').value || 'misc';
+    const amount = Number($('transAmount').value||0);
+    if(!amount){ alert('Enter an amount'); return; }
+    // create a local transaction entry (in real app save to DB)
+    const list = $('recentList');
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.innerHTML = `<div style="flex:1">${new Date().toISOString().slice(0,10)}</div><div style="flex:1">${type}</div><div style="flex:1">${category}</div><div style="flex:1;text-align:right">₹${format(amount)}</div>`;
+    list.prepend(row);
+    // update dashboard numbers
+    let inc = Number($('totalIncome').innerText||0);
+    let exp = Number($('totalExpense').innerText||0);
+    if(type==='income') inc += amount; else exp += amount;
+    $('totalIncome').innerText = format(inc);
+    $('totalExpense').innerText = format(exp);
+    $('totalProfit').innerText = format(inc - exp);
+    $('transAmount').value = '';
+    $('transCategory').value = '';
+  }
+
+  /* ---------- Invoices list (simple) ---------- */
+  async function loadInvoices(){
+    // best-effort: try to fetch invoices; if server doesn't provide endpoint gracefully show placeholder
+    try{
+      const res = await fetch('/invoices');
+      if(!res.ok){
+        $('invoicesList').innerText = 'No saved invoices (server returned ' + res.status + ')';
+        return;
+      }
+      const data = await res.json();
+      if(!Array.isArray(data) || data.length === 0){
+        $('invoicesList').innerText = 'No invoices found.';
+        return;
+      }
+      const ul = document.createElement('div');
+      ul.style.display = 'flex';
+      ul.style.flexDirection = 'column';
+      ul.style.gap = '8px';
+      data.forEach(inv=>{
+        const item = document.createElement('div');
+        item.style.display='flex'; item.style.justifyContent='space-between'; item.style.alignItems='center';
+        item.style.padding='8px'; item.style.border='1px solid #eef3f8'; item.style.borderRadius='8px';
+        item.innerHTML = `<div><b>${inv.invoice_no||inv.id}</b> — ${inv.customer||''} <small style="color:${'#7b8794'}">(${inv.date||''})</small></div>
+                          <div style="display:flex;gap:8px">
+                            <button class="btn ghost" onclick="window.open('/invoice-template.html?id=${encodeURIComponent(inv.id||inv.invoice_no)}','_blank')">Open</button>
+                          </div>`;
+        ul.appendChild(item);
+      });
+      $('invoicesList').innerHTML = '';
+      $('invoicesList').appendChild(ul);
+    }catch(e){
+      $('invoicesList').innerText = 'Could not load invoices: ' + e.message;
+    }
+  }
+
+  /* ---------- Printable open ---------- */
+  $('openPrintableBtn').addEventListener('click', ()=>{
+    const id = $('printId').value;
+    if(!id) { alert('Enter invoice id'); return; }
+    window.open('/invoice-template.html?id=' + encodeURIComponent(id), '_blank');
+  });
+
+  /* ---------- Opening balance ---------- */
   function setOpening(){
-    const val = Number(el('openingInput').value||0);
+    const val = Number($('openingInput').value||0);
     localStorage.setItem('opening_balance_today', String(val));
-    alert('Opening balance set: ₹' + fmt(val));
-    // show somewhere if needed
-    el('profitVal').innerText = fmt(val);
+    alert('Opening set: ₹' + format(val));
+    $('profitVal').innerText = format(val);
   }
   function clearOpening(){
     localStorage.removeItem('opening_balance_today');
-    el('openingInput').value = '0.00';
-    el('profitVal').innerText = '0.00';
+    $('openingInput').value = '0.00';
+    $('profitVal').innerText = '0.00';
     alert('Opening cleared');
   }
 
-  // ---------- init ----------
+  /* ---------- Init ---------- */
   function init(){
     // invoice defaults
-    el('invoiceDate').value = new Date().toISOString().slice(0,10);
-    el('invoiceNo').value = ''; // server auto
-    // prepare 4 rows by default
-    clearProducts();
+    $('invoiceDate').value = new Date().toISOString().slice(0,10);
+    clearProductsToDefault();
 
-    // load opening if exists
-    const open = localStorage.getItem('opening_balance_today');
-    if(open) el('openingInput').value = fmt(open);
+    // button bindings
+    $('addProductBtn').addEventListener('click', ()=>addProduct());
+    $('clearProductsBtn').addEventListener('click', ()=>clearProductsToDefault());
+    $('recalcBtn').addEventListener('click', recalcAll);
+    $('saveInvBtn').addEventListener('click', saveInvoice);
+    $('printInvBtn').addEventListener('click', printInvoice);
+    $('resetFormBtn').addEventListener('click', resetForm);
+    $('setOpeningBtn').addEventListener('click', setOpening);
+    $('clearOpeningBtn').addEventListener('click', clearOpening);
+    $('addTransBtn').addEventListener('click', (e)=>{ e.preventDefault(); addTransaction(); });
 
-    // attach buttons
-    el('addProductBtn').addEventListener('click', ()=>addProduct());
-    el('clearProductsBtn').addEventListener('click', ()=>{ clearProducts(); });
-    el('recalcBtn').addEventListener('click', ()=>recalcAll());
-    el('saveInvBtn').addEventListener('click', ()=>saveInvoice());
-    el('printInvBtn').addEventListener('click', ()=>printInvoice());
-    el('resetFormBtn').addEventListener('click', ()=>{
-      if(!confirm('Type RESET to confirm permanent wipe of form data:')){
-        return;
-      }
-      // simple reset of form to defaults
-      el('customerName').value = '';
-      el('taxPct').value = 0;
-      el('invoiceNo').value = '';
-      el('invoiceDate').value = new Date().toISOString().slice(0,10);
-      clearProducts();
-      recalcAll();
-    });
+    // sidebar initial state for mobile
+    if(window.innerWidth <= 980) $('#sidebar').classList.add('hidden');
 
-    el('setOpeningBtn').addEventListener('click', setOpening);
-    el('clearOpeningBtn').addEventListener('click', clearOpening);
-
-    // nav anchors
-    document.getElementById('nav-create').addEventListener('click', (e)=>{
-      e.preventDefault();
-      // scroll panel into view on narrow screens
-      document.querySelector('.panel').scrollIntoView({behavior:'smooth'});
-    });
-
-    // initial recalc
-    recalcAll();
+    // load invoices if endpoint present (non-fatal)
+    loadInvoices();
   }
 
-  // run on load
   window.addEventListener('DOMContentLoaded', init);
+  window.addEventListener('resize', ()=>{
+    if(window.innerWidth > 980) $('#sidebar').classList.remove('hidden');
+  });
+
   </script>
 </body>
 </html>
