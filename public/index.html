@@ -5,20 +5,21 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>JBS Knit Wear — Billing</title>
 
-<!-- Simple responsive UI: sidebar (desktop) -> hamburger (mobile) + centered content -->
 <style>
 :root{
   --bg:#f5f7fb; --card:#ffffff; --accent:#0b79ff; --muted:#6b7280;
-  --radius:12px; --maxwidth:1100px; --shadow: 0 10px 30px rgba(10,20,40,0.06);
+  --radius:12px; --sidebar-w:240px; --panel-w:420px; --maxwidth:1200px; --shadow: 0 10px 30px rgba(10,20,40,0.06);
 }
 *{box-sizing:border-box}
 body{margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial;background:var(--bg);color:#0b1720}
 a{color:var(--accent);text-decoration:none}
 
-/* layout */
+/* app shell */
 .app{min-height:100vh;display:flex;}
+
+/* sidebar fixed on left */
 .sidebar{
-  width:240px;background:var(--card);padding:20px;border-right:1px solid #eef3f8;
+  width:var(--sidebar-w);background:var(--card);padding:20px;border-right:1px solid #eef3f8;
   box-shadow:var(--shadow);position:fixed;left:0;top:0;bottom:0;overflow:auto;
 }
 .brand{font-weight:900;font-size:18px;margin-bottom:10px}
@@ -26,23 +27,43 @@ a{color:var(--accent);text-decoration:none}
 .menu a .hint{display:block;color:var(--muted);font-size:13px;margin-top:4px}
 .menu a.active{background:#f3f9ff;border-left:4px solid var(--accent);color:var(--accent)}
 
+/* header row above content (keeps pinned but not wide) */
 .header{
-  margin-left:260px;padding:18px 20px;display:flex;align-items:center;gap:12px;
+  margin-left:var(--sidebar-w);padding:18px 20px;display:flex;align-items:center;gap:12px;
   position:sticky;top:0;z-index:3;background:transparent;
 }
 .title{font-size:24px;font-weight:800}
 .header-right{margin-left:auto;display:flex;gap:10px;align-items:center}
 
-/* content container */
-.container{margin-left:260px;flex:1;padding:22px;display:flex;justify-content:center}
-.inner{width:100%;max-width:var(--maxwidth)}
+/* MAIN area uses grid: left content + right panel */
+.main {
+  margin-left:var(--sidebar-w); /* space for fixed sidebar */
+  padding:22px;
+  display:grid;
+  grid-template-columns: 1fr var(--panel-w); /* left content + right panel */
+  column-gap:28px;
+  justify-items:stretch;
+}
 
-/* cards + controls */
+/* when screen is wide use centered container */
+.main-inner{width:100%;max-width:var(--maxwidth);margin:0 auto;display:contents}
+
+/* content area (left column) */
+.content{
+  min-width:0; /* allow shrink */
+}
+
+/* right panel */
+.panel{
+  position:relative;
+}
+
+/* card common */
 .card{background:var(--card);border-radius:12px;padding:16px;box-shadow:var(--shadow)}
 .row{display:flex;gap:14px;flex-wrap:wrap}
 .col{flex:1;min-width:220px}
 
-/* stat */
+/* stat cards */
 .stat{padding:14px;border-radius:10px;background:#fff;border:1px solid #f4f7fb}
 .stat .label{color:var(--muted);font-size:13px}
 .stat .value{font-weight:800;font-size:20px;margin-top:8px}
@@ -58,7 +79,7 @@ a{color:var(--accent);text-decoration:none}
 .btn{background:var(--accent);color:#fff;border:0;padding:10px 14px;border-radius:10px;font-weight:700}
 .btn.ghost{background:transparent;border:1px solid #e6eef8;color:#111}
 
-/* invoice items list */
+/* invoice item list in panel */
 .items{display:flex;flex-direction:column;gap:10px;margin-top:12px}
 .item{
   display:grid;align-items:center;gap:8px;
@@ -70,25 +91,32 @@ a{color:var(--accent);text-decoration:none}
 .item .amount{font-weight:700;text-align:right;padding-right:8px}
 .removeBtn{background:#fff;border:1px solid #f0f4f8;padding:6px;border-radius:8px}
 
-/* totals area */
-.totals{display:flex;justify-content:flex-end;margin-top:12px}
-.totals .box{width:300px}
+/* totals area at bottom of panel */
+.panel-footer{margin-top:12px;display:flex;justify-content:flex-end}
+.panel-footer .box{width:100%}
 
-/* responsive: collapse layout under 980 */
+/* responsive behavior */
+@media (max-width:1200px){
+  :root{--panel-w:380px}
+  .main{grid-template-columns: 1fr var(--panel-w)}
+}
 @media (max-width:980px){
-  .sidebar{position:fixed;left:-100%;transition:left .18s ease;z-index:50}
+  /* mobile: sidebar hidden by default and grid becomes single column */
+  .sidebar{position:fixed;left:-100%;transition:left .18s ease;z-index:1000}
   .sidebar.open{left:0}
   .header{margin-left:0;padding:12px}
-  .container{margin-left:0;padding:14px}
+  .main{margin-left:0;padding:12px;grid-template-columns:1fr;row-gap:16px}
+  .panel{order:2}
+  .content{order:1}
+  /* compact items layout */
   .item{grid-template-columns:48px 1fr;grid-auto-rows:auto}
   .item .desc{grid-column:2;grid-row:1}
   .item .compact{grid-column:2;grid-row:2;display:flex;gap:8px}
   .item .amount{grid-column:2;grid-row:3;display:flex;justify-content:flex-end}
   .title{font-size:18px}
 }
-
-/* tiny screens */
 @media (max-width:420px){
+  .item{grid-template-columns:40px 1fr}
   .input{height:44px;font-size:15px}
   .btn{padding:9px 12px}
   .stat .value{font-size:18px}
@@ -98,7 +126,7 @@ a{color:var(--accent);text-decoration:none}
 <body>
 <div class="app">
 
-  <!-- LEFT SIDEBAR -->
+  <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
     <div class="brand">JBS KNIT WEAR — Billing</div>
     <nav class="menu">
@@ -111,7 +139,7 @@ a{color:var(--accent);text-decoration:none}
     <div style="margin-top:14px;color:var(--muted);font-size:13px">Tip: Save then Print from the invoice view.</div>
   </aside>
 
-  <!-- TOP HEADER (content area) -->
+  <!-- HEADER -->
   <header class="header">
     <div style="display:flex;align-items:center;gap:12px">
       <button id="hamb" class="btn ghost" style="display:none">☰</button>
@@ -126,125 +154,134 @@ a{color:var(--accent);text-decoration:none}
     </div>
   </header>
 
-  <!-- MAIN CONTENT -->
-  <div class="container">
-    <div class="inner">
+  <!-- MAIN grid: left content + right panel -->
+  <main class="main">
+    <div class="main-inner">
 
-      <!-- DASHBOARD VIEW -->
-      <section id="view-dashboard" class="card">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
-          <div>
-            <h1 style="margin:0">Billing Dashboard</h1>
-            <div style="color:var(--muted);margin-top:6px">Quick overview of today's totals and recent activity</div>
-          </div>
-        </div>
+      <!-- LEFT: content column -->
+      <div class="content">
 
-        <div class="row" style="margin-top:16px">
-          <div class="col stat">
-            <div class="label">Total Income</div>
-            <div id="totalIncome" class="value">₹0.00</div>
+        <!-- Dashboard view -->
+        <section id="view-dashboard" class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+            <div>
+              <h1 style="margin:0">Billing Dashboard</h1>
+              <div style="color:var(--muted);margin-top:6px">Quick overview of today's totals and recent activity</div>
+            </div>
           </div>
-          <div class="col stat">
-            <div class="label">Total Expense</div>
-            <div id="totalExpense" class="value">₹0.00</div>
-          </div>
-          <div class="col stat">
-            <div class="label">Profit</div>
-            <div id="profitVal" class="value">₹0.00</div>
-          </div>
-        </div>
 
-        <div style="margin-top:16px" class="card">
-          <h2 style="margin:0 0 12px 0">Recent transactions</h2>
-          <div class="table-wrap">
+          <div class="row" style="margin-top:16px">
+            <div class="col stat">
+              <div class="label">Total Income</div>
+              <div id="totalIncome" class="value">₹0.00</div>
+            </div>
+            <div class="col stat">
+              <div class="label">Total Expense</div>
+              <div id="totalExpense" class="value">₹0.00</div>
+            </div>
+            <div class="col stat">
+              <div class="label">Profit</div>
+              <div id="profitVal" class="value">₹0.00</div>
+            </div>
+          </div>
+
+          <div style="margin-top:16px" class="card">
+            <h2 style="margin:0 0 12px 0">Recent transactions</h2>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Date</th><th>Type</th><th>Category</th><th style="text-align:right">Amount</th></tr></thead>
+                <tbody id="recentTbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- Transactions view -->
+        <section id="view-transactions" class="card" style="display:none;margin-top:16px">
+          <h2 style="margin:0 0 12px 0">Add Transaction</h2>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <select id="txType" class="input" style="width:140px"><option value="income">Income</option><option value="expense">Expense</option></select>
+            <input id="txCat" class="input" placeholder="Category (sales, rent...)" style="flex:1" />
+            <input id="txAmount" class="input" type="number" placeholder="Amount" style="width:140px" />
+            <input id="txDate" class="input" type="date" style="width:150px" />
+          </div>
+          <div style="display:flex;gap:8px;margin-top:12px">
+            <input id="txRef" class="input" placeholder="Reference (optional)" style="flex:1" />
+            <button id="txSave" class="btn">Save</button>
+          </div>
+        </section>
+
+        <!-- Invoices list -->
+        <section id="view-invoices" class="card" style="display:none;margin-top:16px">
+          <h2 style="margin:0 0 12px 0">Invoices</h2>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input id="searchInv" class="input" placeholder="Search invoice no or customer" style="flex:1" />
+            <button id="refreshInv" class="btn ghost">Refresh</button>
+          </div>
+          <div class="table-wrap" style="margin-top:12px">
             <table>
-              <thead><tr><th>Date</th><th>Type</th><th>Category</th><th style="text-align:right">Amount</th></tr></thead>
-              <tbody id="recentTbody"></tbody>
+              <thead><tr><th>ID</th><th>Invoice No</th><th>Date</th><th>Customer</th><th style="text-align:right">Total</th><th>Action</th></tr></thead>
+              <tbody id="invoicesTbody"></tbody>
             </table>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <!-- TRANSACTIONS VIEW -->
-      <section id="view-transactions" class="card" style="display:none;margin-top:16px">
-        <h2 style="margin:0 0 12px 0">Add Transaction</h2>
-        <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <select id="txType" class="input" style="width:140px"><option value="income">Income</option><option value="expense">Expense</option></select>
-          <input id="txCat" class="input" placeholder="Category (sales, rent...)" style="flex:1" />
-          <input id="txAmount" class="input" type="number" placeholder="Amount" style="width:140px" />
-          <input id="txDate" class="input" type="date" style="width:150px" />
-        </div>
-        <div style="display:flex;gap:8px;margin-top:12px">
-          <input id="txRef" class="input" placeholder="Reference (optional)" style="flex:1" />
-          <button id="txSave" class="btn">Save</button>
-        </div>
-      </section>
-
-      <!-- CREATE INVOICE -->
-      <section id="view-create" class="card" style="display:none;margin-top:16px">
-        <h2 style="margin:0 0 12px 0">Create Invoice</h2>
-        <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <input id="invNo" class="input" placeholder="Invoice no (auto)" style="width:140px" />
-          <input id="invDate" class="input" type="date" style="width:160px" />
-          <input id="invCustomer" class="input" placeholder="Customer name" style="flex:1" />
-        </div>
-
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px">
-          <div class="small" style="color:var(--muted)">Products</div>
-          <div style="display:flex;gap:8px">
-            <button id="addItem" class="btn">+ Add</button>
-            <button id="clearItems" class="btn ghost">Clear</button>
-            <button id="recalc" class="btn ghost">Recalc</button>
+        <!-- Printable view -->
+        <section id="view-print" class="card" style="display:none;margin-top:16px">
+          <h2 style="margin:0 0 12px 0">Printable</h2>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input id="printId" class="input" placeholder="Invoice id" style="width:160px" />
+            <button id="openPrint" class="btn">Open printable</button>
           </div>
-        </div>
+        </section>
 
-        <div id="items" class="items"></div>
+      </div> <!-- end content -->
 
-        <div class="totals">
-          <div class="box">
-            <div class="small" style="color:var(--muted)">Subtotal</div>
-            <div id="subtotal" style="font-weight:800;font-size:18px">0.00</div>
-            <div style="margin-top:8px"><label class="small" style="color:var(--muted)">Tax %</label> <input id="taxPerc" class="input" type="number" value="0" style="width:80px;margin-left:8px" /></div>
-            <div style="font-weight:800;margin-top:8px">Total <span id="grandTotal" style="float:right">0.00</span></div>
+      <!-- RIGHT: panel column -->
+      <aside class="panel">
+
+        <!-- create invoice shows in panel -->
+        <section id="view-create" class="card" style="display:block">
+          <h2 style="margin:0 0 12px 0">Create Invoice</h2>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <input id="invNo" class="input" placeholder="Invoice no (auto)" style="width:140px" />
+            <input id="invDate" class="input" type="date" style="width:160px" />
+            <input id="invCustomer" class="input" placeholder="Customer name" style="flex:1" />
           </div>
-        </div>
 
-        <div style="display:flex;gap:10px;margin-top:12px">
-          <button id="saveInvoice" class="btn">Save Invoice</button>
-          <button id="openPrintable" class="btn ghost">Open Printable</button>
-          <div id="saveMsg" class="small" style="align-self:center;color:var(--muted)"></div>
-        </div>
-      </section>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px">
+            <div class="small" style="color:var(--muted)">Products</div>
+            <div style="display:flex;gap:8px">
+              <button id="addItem" class="btn">+ Add</button>
+              <button id="clearItems" class="btn ghost">Clear</button>
+              <button id="recalc" class="btn ghost">Recalc</button>
+            </div>
+          </div>
 
-      <!-- INVOICES LIST -->
-      <section id="view-invoices" class="card" style="display:none;margin-top:16px">
-        <h2 style="margin:0 0 12px 0">Invoices</h2>
-        <div style="display:flex;gap:8px;align-items:center">
-          <input id="searchInv" class="input" placeholder="Search invoice no or customer" style="flex:1" />
-          <button id="refreshInv" class="btn ghost">Refresh</button>
-        </div>
-        <div class="table-wrap" style="margin-top:12px">
-          <table>
-            <thead><tr><th>ID</th><th>Invoice No</th><th>Date</th><th>Customer</th><th style="text-align:right">Total</th><th>Action</th></tr></thead>
-            <tbody id="invoicesTbody"></tbody>
-          </table>
-        </div>
-      </section>
+          <div id="items" class="items" aria-live="polite"></div>
 
-      <!-- PRINTABLE -->
-      <section id="view-print" class="card" style="display:none;margin-top:16px">
-        <h2 style="margin:0 0 12px 0">Printable</h2>
-        <div style="display:flex;gap:8px;align-items:center">
-          <input id="printId" class="input" placeholder="Invoice id" style="width:160px" />
-          <button id="openPrint" class="btn">Open printable</button>
-        </div>
-      </section>
+          <div class="panel-footer">
+            <div class="box">
+              <div class="small" style="color:var(--muted)">Subtotal</div>
+              <div id="subtotal" style="font-weight:800;font-size:18px">0.00</div>
+              <div style="margin-top:8px"><label class="small" style="color:var(--muted)">Tax %</label> <input id="taxPerc" class="input" type="number" value="0" style="width:80px;margin-left:8px" /></div>
+              <div style="font-weight:800;margin-top:8px">Total <span id="grandTotal" style="float:right">0.00</span></div>
+              <div style="display:flex;gap:10px;margin-top:12px">
+                <button id="saveInvoice" class="btn">Save Invoice</button>
+                <button id="openPrintable" class="btn ghost">Open Printable</button>
+                <div id="saveMsg" class="small" style="align-self:center;color:var(--muted)"></div>
+              </div>
+            </div>
+          </div>
+        </section>
 
-    </div>
-  </div>
+      </aside>
+
+    </div> <!-- main-inner -->
+  </main>
+
 </div>
 
-<!-- minimal JS for navigation, items, totals -->
 <script>
 /* --- Navigation & sidebar toggle --- */
 const views = ['dashboard','transactions','create','invoices','print'];
@@ -290,7 +327,7 @@ async function loadDashboard(){
   document.getElementById('profitVal').textContent = '₹' + (income - expense).toFixed(2);
 
   const tx = await apiGet('/transactions') || [];
-  const tb = document.getElementById('recentTbody'); tb.innerHTML = '';
+  const tb = document.getElementById('recentTbody'); if (tb) tb.innerHTML = '';
   (tx.slice(0,8)||[]).forEach(t=>{
     const tr = document.createElement('tr');
     tr.innerHTML = `<td>${t.date||''}</td><td>${t.type||''}</td><td>${t.category||''}</td><td style="text-align:right">${Number(t.amount||0).toFixed(2)}</td>`;
@@ -299,7 +336,8 @@ async function loadDashboard(){
 }
 
 /* --- Transactions save --- */
-document.getElementById('txSave').addEventListener('click', async ()=>{
+const txSaveBtn = document.getElementById('txSave');
+if (txSaveBtn) txSaveBtn.addEventListener('click', async ()=>{
   const payload = { type:document.getElementById('txType').value, category:document.getElementById('txCat').value, amount:parseFloat(document.getElementById('txAmount').value)||0, date:document.getElementById('txDate').value||new Date().toISOString().slice(0,10), reference:document.getElementById('txRef')?.value||'' };
   if (!payload.amount) return alert('Enter amount');
   const res = await apiPost('/transactions', payload);
@@ -307,13 +345,15 @@ document.getElementById('txSave').addEventListener('click', async ()=>{
 });
 
 /* --- Opening balance (localStorage simple) --- */
-document.getElementById('setOpening').addEventListener('click', ()=>{
+const setOpen = document.getElementById('setOpening');
+if (setOpen) setOpen.addEventListener('click', ()=>{
   const v = parseFloat(document.getElementById('opening').value) || 0;
   localStorage.setItem('opening_today', String(v.toFixed(2)));
   alert('Opening set: ₹' + v.toFixed(2));
   loadDashboard();
 });
-document.getElementById('clearOpening').addEventListener('click', ()=> { localStorage.removeItem('opening_today'); alert('Opening cleared'); loadDashboard(); });
+const clearOpen = document.getElementById('clearOpening');
+if (clearOpen) clearOpen.addEventListener('click', ()=> { localStorage.removeItem('opening_today'); alert('Opening cleared'); loadDashboard(); });
 
 /* --- Invoice items logic --- */
 const itemsEl = document.getElementById('items');
@@ -323,7 +363,7 @@ function makeItem(i,data={}){
   div.dataset.index = i;
   div.innerHTML = `
     <div class="sno">${i+1}</div>
-    <input class="desc" placeholder="Product description" value="${data.description||''}" />
+    <input class="desc" placeholder="Product description" value="${(data.description||'').replace(/"/g,'&quot;')}" />
     <input class="qty" type="number" placeholder="Qty" value="${data.qty||''}" />
     <input class="rate" type="number" placeholder="Rate" value="${data.unit_price||''}" />
     <input class="disc" type="number" placeholder="Disc %" value="${data.discount||0}" />
@@ -343,9 +383,9 @@ function bindItem(row){
 function addItem(data){ itemsEl.appendChild(makeItem(itemsEl.children.length, data||{})); calcTotals(); }
 function reindex(){ Array.from(itemsEl.children).forEach((c,i)=> c.querySelector('.sno').textContent = i+1); }
 function clearItems(){ itemsEl.innerHTML=''; for(let i=0;i<6;i++) addItem(); }
-document.getElementById('addItem').addEventListener('click', ()=> addItem());
-document.getElementById('clearItems').addEventListener('click', ()=> { if(confirm('Clear all items?')) clearItems(); });
-document.getElementById('recalc').addEventListener('click', ()=> { document.querySelectorAll('.item').forEach(r=> delete r.dataset.override); calcTotals(); });
+const addBtn = document.getElementById('addItem'); if (addBtn) addBtn.addEventListener('click', ()=> addItem());
+const clearBtn = document.getElementById('clearItems'); if (clearBtn) clearBtn.addEventListener('click', ()=> { if(confirm('Clear all items?')) clearItems(); });
+const recalcBtn = document.getElementById('recalc'); if (recalcBtn) recalcBtn.addEventListener('click', ()=> { document.querySelectorAll('.item').forEach(r=> delete r.dataset.override); calcTotals(); });
 
 /* --- Totals --- */
 function calcTotals(){
@@ -357,10 +397,10 @@ function calcTotals(){
   document.getElementById('subtotal').textContent = subtotal.toFixed(2);
   document.getElementById('grandTotal').textContent = grand.toFixed(2);
 }
-document.getElementById('taxPerc').addEventListener('input', calcTotals);
+document.getElementById('taxPerc')?.addEventListener('input', calcTotals);
 
 /* --- Save invoice --- */
-document.getElementById('saveInvoice').addEventListener('click', async ()=>{
+document.getElementById('saveInvoice')?.addEventListener('click', async ()=>{
   const items = Array.from(itemsEl.children).map(r=>{
     const desc = r.querySelector('.desc').value.trim();
     const qty = parseFloat(r.querySelector('.qty').value)||0;
@@ -377,7 +417,7 @@ document.getElementById('saveInvoice').addEventListener('click', async ()=>{
 });
 
 /* open printable */
-document.getElementById('openPrintable').addEventListener('click', ()=>{
+document.getElementById('openPrintable')?.addEventListener('click', ()=>{
   const msg = document.getElementById('saveMsg').textContent || '';
   const m = msg.match(/\d+/);
   const id = m ? m[0] : prompt('Enter invoice id to open');
@@ -387,14 +427,15 @@ document.getElementById('openPrintable').addEventListener('click', ()=>{
 /* load invoices */
 async function loadInvoices(){
   const list = await apiGet('/invoices') || [];
-  const tbody = document.getElementById('invoicesTbody'); tbody.innerHTML = '';
+  const tbody = document.getElementById('invoicesTbody'); if (!tbody) return;
+  tbody.innerHTML = '';
   list.forEach(inv=>{
     const tr = document.createElement('tr');
     tr.innerHTML = `<td style="padding:8px">${inv.id}</td><td style="padding:8px">${inv.invoice_no||''}</td><td style="padding:8px">${inv.date||''}</td><td style="padding:8px">${inv.customer_name||''}</td><td style="padding:8px;text-align:right">${Number(inv.total||0).toFixed(2)}</td><td style="padding:8px"><button class="btn ghost" onclick="window.open('/invoice-template.html?id=${inv.id}','_blank')">Open</button></td>`;
     tbody.appendChild(tr);
   });
 }
-document.getElementById('refreshInv').addEventListener('click', ()=> loadInvoices());
+document.getElementById('refreshInv')?.addEventListener('click', ()=> loadInvoices());
 
 /* --- Init --- */
 function init(){
