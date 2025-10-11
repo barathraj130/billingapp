@@ -1,787 +1,841 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Billing — JBS KNIT WEAR</title>
-<link rel="icon" href="data:;base64,iVBORw0KGgo=">
-<style>
-  :root{
-    --bg:#f3f6f8; --card:#fff; --muted:#6b7280; --accent:#0a66ff;
-    --radius:12px; --sidebar-w:260px; --gap:22px;
-    font-family: Inter, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-  }
-  html,body{height:100%;margin:0;background:var(--bg);color:#111}
-  a{color:inherit}
-  /* layout */
-  .app{min-height:100vh;display:flex;align-items:stretch}
-  .sidebar{
-    width:var(--sidebar-w);background:linear-gradient(#ffffff, #fbfdff);
-    box-shadow: 0 0 0 1px rgba(15,23,42,0.02), 0 6px 22px rgba(15,23,42,0.04);
-    padding:24px 18px;box-sizing:border-box;
-    position:relative;
-  }
-  .brand{font-weight:800;font-size:20px;margin:4px 0 8px}
-  .brand-sub{font-size:12px;color:var(--muted);display:block;margin-bottom:16px}
-  .nav{margin-top:18px}
-  .nav button{display:block;width:100%;text-align:left;padding:12px 12px;border-radius:9px;border:0;background:transparent;color:#0b1220;font-weight:600;margin-bottom:6px;cursor:pointer}
-  .nav button small{display:block;font-weight:400;color:var(--muted);font-size:12px;margin-top:3px}
-  .nav button.active{background:linear-gradient(90deg,#ecf5ff,#fff);box-shadow:inset 0 0 0 3px rgba(10,102,255,0.06);border-left:4px solid var(--accent);padding-left:10px}
-  .tip{font-size:12px;color:var(--muted);margin-top:14px}
-  /* top bar for mobile toggle */
-  .topbar{display:none;align-items:center;justify-content:space-between;padding:12px 18px;background:transparent}
-  .topbar .menu-btn{width:36px;height:36px;border-radius:8px;border:0;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,0.06);cursor:pointer}
-  /* content */
-  .main{flex:1;padding:28px 32px;box-sizing:border-box}
-  .header-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
-  .opening{display:flex;gap:8px;align-items:center}
-  .opening input{padding:10px 12px;border-radius:8px;border:1px solid #e6edf3;background:#fff}
-  .btn{background:var(--accent);color:#fff;padding:8px 12px;border-radius:8px;border:0;cursor:pointer}
-  /* cards */
-  .panel{background:var(--card);padding:22px;border-radius:var(--radius);box-shadow:0 8px 30px rgba(15,23,42,0.06)}
-  .grid{display:grid;grid-template-columns:1fr 380px;gap:22px}
-  .dashboard-cards{display:flex;gap:12px;flex-wrap:wrap}
-  .stat{flex:1;min-width:160px;background:#fff;padding:18px;border-radius:12px;box-shadow:0 6px 20px rgba(15,23,42,0.03)}
-  .stat .label{color:var(--muted);font-size:13px}
-  .stat .value{font-size:20px;font-weight:800;margin-top:6px}
-  .section-title{font-size:22px;font-weight:800;margin-bottom:12px}
-  /* invoice create */
-  .form-row{display:flex;gap:10px;align-items:center}
-  .input, .select, .date{padding:10px 12px;border-radius:8px;border:1px solid #e6edf3;background:#fff;min-height:40px;box-sizing:border-box}
-  .products .row{display:flex;align-items:center;gap:14px;padding:14px;border-radius:10px;border:1px solid #eef3f7;margin-bottom:10px;background:#fff}
-  .products .sno{width:36px;text-align:center;color:var(--muted)}
-  .products .desc{flex:1}
-  .products .qty,.products .rate,.products .disc,.products .amount{width:90px;text-align:center}
-  .products .amount{font-weight:700}
-  .small{font-size:13px;color:var(--muted)}
-  .actions{display:flex;gap:10px;align-items:center;margin-top:8px}
-  .btn-outline{background:#fff;border:1px solid #e6edf3;padding:8px 12px;border-radius:8px;cursor:pointer}
-  /* invoice totals */
-  .totals{display:flex;flex-direction:column;align-items:flex-end;gap:8px;margin-top:18px}
-  .totals .line{display:flex;gap:14px;align-items:center}
-  .totals .label{color:var(--muted)}
-  .totals .value{font-weight:800}
-  /* transactions table */
-  table{width:100%;border-collapse:collapse;background:transparent}
-  th,td{padding:12px;border-bottom:1px solid #f1f5f8;text-align:left}
-  th{font-weight:700;color:#374151;background:#fff}
-  .right{text-align:right}
-  /* invoice list */
-  .invoice-card{padding:12px;border-radius:10px;border:1px solid #eef3f7;background:#fff;margin-bottom:10px}
-  /* responsive */
-  @media (max-width:1000px){
-    .grid{grid-template-columns:1fr}
-    .sidebar{position:fixed;left:0;top:0;bottom:0;transform:translateX(-120%);transition:transform .28s ease;z-index:40}
-    .sidebar.open{transform:translateX(0)}
-    .topbar{display:flex}
-    .main{padding:12px}
-  }
-  @media (max-width:520px){
-    .sidebar{width:220px}
-    .products .qty,.products .rate,.products .disc,.products .amount{width:60px}
-    .grid{gap:10px}
-  }
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Billing — JBS KNIT WEAR</title>
 
-  /* print invoice portrait 14cm x 20cm */
-  @media print {
-    @page { size: 14cm 20cm; margin: 10mm; }
-    body *{visibility:hidden}
-    .print-area, .print-area *{visibility:visible}
-    .print-area{position:fixed;left:0;top:0;width:100%}
-  }
+  <!-- Simple reset + variables -->
+  <style>
+    :root{
+      --bg:#f3f6f8; --card:#ffffff; --muted:#7b8794; --accent:#1677ff;
+      --radius:12px; --sidebar-w:260px; --container-max:1100px;
+      --shadow: 0 10px 30px rgba(23,33,49,0.06);
+      --phone-break: 760px;
+    }
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial;color:#111;background:var(--bg);}
+    a{color:inherit}
+    img{max-width:100%}
+    button{cursor:pointer}
 
-  /* small helpers */
-  .muted{color:var(--muted)}
-  .float-right{float:right}
-  .mb{margin-bottom:12px}
-</style>
+    /* Layout */
+    .app{display:flex;min-height:100vh}
+    .sidebar{
+      width:var(--sidebar-w); background:linear-gradient(#fff,#fff); box-shadow: none;
+      padding:28px 22px; border-right:1px solid rgba(20,30,40,.04); box-sizing:border-box;
+      position:fixed; left:0; top:0; bottom:0; overflow:auto;
+    }
+    .brand{font-weight:800;font-size:20px;margin-bottom:18px}
+    .brand small{font-weight:500;color:var(--muted);display:block;font-size:13px}
+    .nav{margin-top:12px}
+    .nav a{display:block;padding:14px 12px;border-radius:10px;color:#223; text-decoration:none;margin-bottom:6px;}
+    .nav a small{display:block;color:var(--muted);font-weight:500;margin-top:4px;font-size:12px}
+    .nav a.active{background:linear-gradient(90deg,#f3fbff,#fff);border-left:4px solid var(--accent);padding-left:10px}
+
+    /* Main content wrapper */
+    .main{
+      margin-left:var(--sidebar-w); flex:1; padding:28px; box-sizing:border-box;
+    }
+    .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+    .top-right{display:flex;gap:10px;align-items:center}
+    .opening{display:flex;align-items:center;gap:8px}
+
+    /* container card */
+    .card{background:var(--card);border-radius:14px;padding:22px;box-shadow:var(--shadow);}
+
+    /* Dashboard grid */
+    .grid{display:grid;grid-template-columns:1fr 360px;gap:24px;align-items:start}
+    .stat-row{display:flex;gap:18px;flex-wrap:wrap}
+    .stat{background:#fff;border-radius:10px;padding:18px;min-width:180px;box-shadow:var(--shadow)}
+    .h1{font-size:28px;margin:0 0 8px;font-weight:800}
+    .h2{font-size:16px;margin:0;color:var(--muted)}
+
+    /* Forms & invoice layout */
+    .form-row{display:flex;gap:12px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+    .input{padding:12px;border-radius:10px;border:1px solid #e9eef2;background:#fff;min-width:0}
+    .btn{background:var(--accent);color:#fff;padding:10px 12px;border-radius:8px;border:none}
+    .btn.alt{background:#fff;border:1px solid #e7edf3;color:#222}
+    .btn.warn{background:#ff7b5a}
+
+    /* product list */
+    .products{margin-top:8px}
+    .prod-row{display:grid;grid-template-columns:48px 1fr 80px 90px 120px 32px;gap:10px;align-items:center;padding:14px;border-radius:10px;background:linear-gradient(#fff,#fff);border:1px solid #eef3f6;margin-bottom:10px}
+    .prod-row .num{font-weight:700;color:#6f7882}
+    .prod-row input[type="text"], .prod-row input[type="number"]{padding:8px;border-radius:8px;border:1px solid #eef3f6;background:#fafcff;min-width:0}
+    .right-summary{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+
+    /* Table for transactions */
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:12px;text-align:left;border-bottom:1px solid #f0f4f7}
+    th{background:transparent;color:#333}
+
+    /* small helpers */
+    .muted{color:var(--muted)}
+    .small{font-size:13px}
+    .float-right{text-align:right}
+
+    /* Trash / invoices list */
+    .list-row{display:flex;justify-content:space-between;padding:12px 14px;border-radius:10px;border:1px solid #eef3f6;margin-bottom:8px;align-items:center;background:#fff}
+
+    /* Mobile responsiveness */
+    @media (max-width:760px){
+      .sidebar{position:relative;width:100%;height:auto;display:flex;gap:12px;align-items:center;overflow:hidden;padding:12px}
+      .main{margin-left:0;padding:12px}
+      .grid{grid-template-columns:1fr}
+      .stat-row{justify-content:space-between}
+      .prod-row{grid-template-columns:36px 1fr 70px 70px 80px 28px}
+      .right-summary{align-items:flex-start}
+    }
+
+    /* Print invoice (portrait 14cm x 20cm) */
+    @media print {
+      @page { size: 14cm 20cm portrait; margin: 8mm; }
+      body * { visibility: hidden; }
+      .print-area, .print-area * { visibility: visible; }
+      .print-area { position: absolute; left: 0; top: 0; width: 100%; }
+    }
+  </style>
 </head>
 <body>
-<div class="app">
-  <div class="sidebar" id="sidebar">
-    <div class="brand">JBS KNIT WEAR — <span style="font-weight:700">Billing</span></div>
-    <span class="brand-sub">Simple billing for retail</span>
-    <nav class="nav" id="nav">
-      <button data-view="dashboard" class="active">Dashboard <small>Quick totals & recent</small></button>
-      <button data-view="transactions">Transactions <small>Income & expense add</small></button>
-      <button data-view="create">Create Invoice <small>Add products & save</small></button>
-      <button data-view="invoices">Invoices <small>Saved invoices</small></button>
-      <button data-view="printable">Printable template <small>View / print invoice</small></button>
-    </nav>
-    <div class="tip">Tip: Save then Print from the invoice view.</div>
-  </div>
+  <div class="app">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">JBS KNIT WEAR — <small>Billing</small></div>
+      <nav class="nav" id="nav">
+        <a href="#" data-view="dashboard" class="active">Dashboard <small>Quick totals & recent</small></a>
+        <a href="#" data-view="transactions">Transactions <small>Income & expense add</small></a>
+        <a href="#" data-view="create">Create Invoice <small>Add products & save</small></a>
+        <a href="#" data-view="invoices">Invoices <small>Saved invoices list</small></a>
+        <a href="#" data-view="printable">Printable template <small>View / print invoice</small></a>
+        <hr style="border:none;margin:18px 0;border-top:1px dashed #eee">
+        <div class="small muted">Tip: Use Export backup before major changes</div>
+        <div style="margin-top:12px">
+          <button class="btn alt" id="exportBackupBtn">Export backup</button>
+          <label style="display:inline-block;margin-left:8px">
+            <input type="file" id="importFile" accept=".json" style="display:none">
+            <button class="btn alt" id="importBtn">Import</button>
+          </label>
+        </div>
+        <div style="margin-top:8px">
+          <button class="btn alt" id="openTrash">Trash (<span id="trashCount">0</span>)</button>
+        </div>
+      </nav>
+    </aside>
 
-  <div class="main">
-    <div class="topbar">
-      <button class="menu-btn" id="menuToggle">☰</button>
-      <div></div>
-      <div class="opening">
-        <label class="small muted">Opening balance (today)</label>
-        <input id="openingInput" placeholder="0.00" style="width:120px">
-        <button class="btn" id="setOpening">Set</button>
-        <button class="btn" id="clearOpening" style="background:#fff;color:#111;border:1px solid #e6edf3">Clear</button>
-      </div>
-    </div>
+    <!-- Main -->
+    <main class="main">
+      <div class="topbar">
+        <div style="display:flex;align-items:center;gap:12px">
+          <button class="btn alt" id="menuToggle">≡</button>
+          <div style="font-weight:700;font-size:18px">Billing <small class="muted" style="font-weight:500;margin-left:8px">— manage invoices & quick sales</small></div>
+        </div>
 
-    <!-- Header for desktop -->
-    <div class="header-row">
-      <div style="display:flex;align-items:center;gap:18px">
-        <h2 style="margin:0">Billing <span style="color:var(--muted);font-weight:400;margin-left:10px">— manage invoices & quick sales</span></h2>
+        <div class="top-right">
+          <div class="opening small muted">Opening balance (today)</div>
+          <input id="openingInput" class="input input-small" style="padding:10px;border-radius:10px;border:1px solid #e9eef2;width:120px" placeholder="0.00" />
+          <button class="btn alt" id="setOpening">Set</button>
+          <button class="btn alt" id="clearOpening">Clear</button>
+        </div>
       </div>
-      <div class="opening" style="gap:12px">
-        <label class="small muted">Opening balance (today)</label>
-        <input id="openingInputDesktop" placeholder="0.00" style="width:140px">
-        <button class="btn" id="setOpeningDesktop">Set</button>
-        <button class="btn" id="clearOpeningDesktop" style="background:#fff;color:#111;border:1px solid #e6edf3">Clear</button>
-      </div>
-    </div>
 
-    <!-- Views container -->
-    <div id="views" style="display:block">
-      <!-- DASHBOARD -->
-      <div id="view-dashboard" class="view">
-        <div class="grid">
-          <div>
-            <div class="panel">
-              <div style="display:flex;justify-content:space-between;align-items:flex-start">
-                <div>
-                  <div class="section-title">Billing Dashboard</div>
-                  <div class="small muted">Quick overview of today's totals and recent activity</div>
+      <!-- Views container -->
+      <div id="viewRoot">
+        <!-- Dashboard view -->
+        <section id="view-dashboard" class="card" style="display:block">
+          <div class="h1">Billing Dashboard</div>
+          <div class="muted small">Quick overview of today's totals and recent activity</div>
+          <div style="margin-top:18px" class="grid">
+            <div>
+              <div class="card" style="margin-bottom:18px">
+                <div class="stat-row">
+                  <div class="stat">
+                    <div class="small muted">Total Income</div>
+                    <div style="font-size:20px;font-weight:800">₹<span id="totalIncome">0.00</span></div>
+                  </div>
+                  <div class="stat">
+                    <div class="small muted">Total Expense</div>
+                    <div style="font-size:20px;font-weight:800">₹<span id="totalExpense">0.00</span></div>
+                  </div>
+                  <div class="stat">
+                    <div class="small muted">Profit</div>
+                    <div style="font-size:20px;font-weight:800">₹<span id="profit">0.00</span></div>
+                  </div>
                 </div>
-                <div style="font-weight:800;color:#0472ff">Profit: <span id="profitDisplay">₹0.00</span></div>
-              </div>
-              <div class="dashboard-cards" style="margin-top:18px">
-                <div class="stat"><div class="label">Total Income</div><div class="value" id="totalIncome">₹0.00</div></div>
-                <div class="stat"><div class="label">Total Expense</div><div class="value" id="totalExpense">₹0.00</div></div>
-                <div class="stat"><div class="label">Profit</div><div class="value" id="profitSmall">₹0.00</div></div>
-              </div>
 
-              <div style="margin-top:22px">
-                <div class="section-title">Recent transactions</div>
-                <div style="display:flex;justify-content:flex-end">
-                  <button id="exportAllTransactions" class="btn-outline">Download CSV</button>
-                  <button id="exportCashSalesTop" class="btn" style="background:#16a34a;margin-left:8px">Export Cash Sales</button>
-                  <button id="exportGPaySalesTop" class="btn" style="background:#059669;margin-left:8px">Export GPay Sales</button>
+                <div style="margin-top:18px">
+                  <div class="h2">Recent transactions</div>
+                  <div style="margin-top:12px">
+                    <div class="card" style="padding:0">
+                      <table>
+                        <thead><tr><th>Date</th><th>Type</th><th>Category</th><th>Amount</th></tr></thead>
+                        <tbody id="recentTx"><tr><td colspan="4" class="muted small">No recent transactions</td></tr></tbody>
+                      </table>
+                    </div>
+                  </div>
                 </div>
-                <div style="margin-top:12px" class="panel">
+              </div>
+            </div>
+
+            <aside>
+              <div class="card" style="margin-bottom:14px">
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <div class="h2">Recent transactions</div>
+                  <button class="btn" id="exportCsvBtn" title="Download CSV">Export CSV</button>
+                </div>
+                <div style="margin-top:10px">
                   <table>
-                    <thead>
-                      <tr><th>Date</th><th>Type</th><th>Category</th><th class="right">Amount</th></tr>
-                    </thead>
-                    <tbody id="recentTransBody">
-                      <tr><td colspan="4" class="muted">No recent transactions</td></tr>
-                    </tbody>
+                    <thead><tr><th>Date</th><th>Type</th><th>Category</th><th>Amount</th></tr></thead>
+                    <tbody id="rightRecentTx"><tr><td colspan="4" class="muted small">No recent transactions</td></tr></tbody>
                   </table>
                 </div>
               </div>
 
-            </div>
-          </div>
-
-          <div>
-            <div class="panel">
-              <div class="section-title">Quick invoice panel <span class="small muted" style="font-weight:400"> (also in Create Invoice)</span></div>
-              <div style="display:flex;gap:8px;align-items:center">
-                <input id="quickTotal" class="input" placeholder="Quick total" style="flex:1">
-                <button id="quickAddBtn" class="btn" style="padding:8px 12px">Add</button>
+              <div class="card">
+                <div class="h2">Trash</div>
+                <div class="muted small">Recover deleted invoices from trash</div>
+                <div id="trashList" style="margin-top:8px"></div>
               </div>
-              <div style="margin-top:12px" class="small muted">Use the left menu to open the full Create Invoice screen for editing and printing.</div>
-            </div>
+            </aside>
           </div>
-        </div>
-      </div>
+        </section>
 
-      <!-- TRANSACTIONS -->
-      <div id="view-transactions" class="view" style="display:none">
-        <div class="panel">
-          <div class="section-title">Transactions <span class="small muted">Quick add income & expense</span></div>
-
-          <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:10px">
-            <select id="txnType" class="select input" style="width:120px">
-              <option value="income">Income</option>
-              <option value="expense">Expense</option>
-            </select>
-            <input id="txnCategory" class="input" placeholder="Category" style="width:180px">
-            <input id="txnAmount" class="input" placeholder="Amount" style="width:120px">
-            <input type="date" id="txnDate" class="date">
-            <select id="txnPay" class="select input" style="width:140px">
-              <option>Cash</option>
-              <option>GPay</option>
-              <option>Other</option>
-            </select>
-            <button id="txnAddBtn" class="btn">Add</button>
-          </div>
-
-          <div style="margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-            <input type="date" id="filterFrom" class="date" style="width:150px">
-            <input type="date" id="filterTo" class="date" style="width:150px">
-            <select id="filterType" class="input" style="width:120px">
-              <option value="all">All</option>
-              <option value="income">Income</option>
-              <option value="expense">Expense</option>
-            </select>
-            <select id="filterPay" class="input" style="width:120px">
-              <option value="all">All pay</option><option value="Cash">Cash</option><option value="GPay">GPay</option>
-            </select>
-            <button id="txnFilterBtn" class="btn-outline">Filter</button>
-            <button id="txnClearFilterBtn" class="btn-outline">Clear</button>
-            <div style="flex:1"></div>
-            <button id="exportTxCSV" class="btn" style="background:#16a34a">Download CSV</button>
-            <button id="exportCashFromTx" class="btn" style="background:#0b74ff;margin-left:6px">Export Cash Sales</button>
-            <button id="exportGPayFromTx" class="btn" style="background:#059669;margin-left:6px">Export GPay Sales</button>
-          </div>
+        <!-- Transactions view -->
+        <section id="view-transactions" class="card" style="display:none">
+          <div class="h1">Transactions</div>
+          <div class="muted small">Quick add income & expense</div>
 
           <div style="margin-top:12px">
-            <table>
-              <thead><tr><th>Date</th><th>Type</th><th>Category</th><th>Pay</th><th class="right">Amount</th></tr></thead>
-              <tbody id="txnTableBody"><tr><td colspan="5" class="muted">No transactions added</td></tr></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
+            <div class="form-row">
+              <select id="txType" class="input">
+                <option value="income">Income</option>
+                <option value="expense">Expense</option>
+              </select>
+              <input id="txCategory" class="input" placeholder="Category (sales / purchases...)" />
+              <input id="txAmount" class="input" placeholder="Amount" type="number" />
+              <input id="txDate" class="input" placeholder="dd/mm/yyyy" />
+              <select id="txPay" class="input"><option>Cash</option><option>GPay</option></select>
+              <button class="btn" id="txAdd">Add</button>
+            </div>
 
-      <!-- CREATE INVOICE -->
-      <div id="view-create" class="view" style="display:none">
-        <div class="panel">
-          <div class="section-title">Create Invoice</div>
-
-          <div style="display:flex;gap:10px;flex-wrap:wrap">
-            <input id="invNo" class="input" placeholder="Invoice no (auto)" style="width:260px">
-            <input id="invDate" type="date" class="date" style="width:160px">
-            <input id="invCustomer" class="input" placeholder="Customer name" style="flex:1">
-          </div>
-
-          <div style="margin-top:10px">
-            <label class="small muted">Payment Method</label>
-            <select id="invPayment" class="input" style="width:200px;margin-top:6px">
-              <option>Cash</option><option>GPay</option><option>Other</option>
-            </select>
+            <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
+              <input id="filterFrom" type="date" class="input" />
+              <input id="filterTo" type="date" class="input" />
+              <select id="filterType" class="input"><option value="all">All</option><option value="income">Income</option><option value="expense">Expense</option></select>
+              <button class="btn alt" id="filterBtn">Filter</button>
+              <button class="btn alt" id="clearFilter">Clear</button>
+              <button class="btn" id="downloadTxCsv" style="margin-left:auto">Download CSV</button>
+            </div>
           </div>
 
           <div style="margin-top:14px">
-            <div style="display:flex;align-items:center;justify-content:space-between">
-              <div class="small muted">Products</div>
-              <div class="actions">
-                <button id="addProd" class="btn-outline">+ Add</button>
-                <button id="clearProd" class="btn-outline">Clear</button>
-                <button id="recalc" class="btn-outline">Recalc</button>
-              </div>
-            </div>
+            <table>
+              <thead><tr><th>Date</th><th>Type</th><th>Category</th><th>Pay</th><th>Amount</th><th></th></tr></thead>
+              <tbody id="txTable">
+                <tr><td colspan="6" class="muted">No transactions added</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
 
-            <div class="products" id="prodList" style="margin-top:12px">
-              <!-- product rows inserted here -->
-            </div>
+        <!-- Create invoice -->
+        <section id="view-create" class="card" style="display:none">
+          <div class="h1">Create Invoice</div>
+          <div class="form-row" style="margin-top:12px">
+            <input id="invoiceNo" class="input" placeholder="Invoice no (auto)" />
+            <input id="invoiceDate" class="input" type="date" />
+            <input id="customerName" class="input" placeholder="Customer name" style="flex:1" />
+          </div>
 
-            <div class="totals">
-              <div class="line"><div class="label">Subtotal:</div><div class="value" id="invSubtotal">₹0.00</div></div>
-              <div class="line"><div class="label">Tax %:</div><input id="invTax" class="input" style="width:80px" value="0"></div>
-              <div class="line"><div class="label" style="font-size:18px">Total:</div><div class="value" id="invTotal" style="font-size:18px">₹0.00</div></div>
-            </div>
+          <div class="form-row">
+            <label class="muted small" style="margin-right:6px">Payment Method</label>
+            <select id="paymentMethod" class="input" style="width:160px">
+              <option>Cash</option><option>GPay</option>
+            </select>
 
-            <div style="margin-top:16px;display:flex;gap:10px">
-              <button id="saveInvoice" class="btn">Save</button>
-              <button id="printInvoice" class="btn-outline">Print</button>
-              <button id="resetInvoice" class="btn-outline" style="background:#fff;border:1px solid #ff9b87">Reset</button>
+            <div style="margin-left:auto;display:flex;gap:8px">
+              <button class="btn" id="addProductBtn">+ Add</button>
+              <button class="btn alt" id="clearProducts">Clear</button>
+              <button class="btn alt" id="recalcTotals">Recalc</button>
             </div>
           </div>
-        </div>
+
+          <div class="products" id="productsContainer">
+            <!-- product rows generated by JS -->
+          </div>
+
+          <div style="display:flex;justify-content:flex-end;align-items:center;margin-top:10px;gap:18px">
+            <div class="right-summary">
+              <div class="muted small">Subtotal:</div>
+              <div style="font-weight:800">₹<span id="subtotal">0.00</span></div>
+            </div>
+            <div class="right-summary">
+              <div class="muted small">Tax %:</div>
+              <input id="taxPct" class="input" type="number" value="0" style="width:80px" />
+              <div style="font-weight:800">₹<span id="taxAmount">0.00</span></div>
+            </div>
+            <div class="right-summary">
+              <div class="muted small">Total</div>
+              <div style="font-weight:900;font-size:20px">₹<span id="invoiceTotal">0.00</span></div>
+            </div>
+          </div>
+
+          <div style="margin-top:18px;display:flex;gap:12px">
+            <button class="btn" id="saveInvoice">Save</button>
+            <button class="btn alt" id="printInvoice">Print</button>
+            <button class="btn warn" id="resetInvoice">Reset</button>
+          </div>
+        </section>
+
+        <!-- Invoices list -->
+        <section id="view-invoices" class="card" style="display:none">
+          <div class="h1">Invoices</div>
+          <div class="muted small">Saved invoices</div>
+          <div style="margin-top:12px" id="invoiceList"></div>
+        </section>
+
+        <!-- Printable template -->
+        <section id="view-printable" class="card" style="display:none">
+          <div class="h1">Printable template</div>
+          <div class="muted small">Click a saved invoice to view printable version</div>
+          <div style="margin-top:14px" id="printPreview"></div>
+        </section>
       </div>
-
-      <!-- INVOICE LIST -->
-      <div id="view-invoices" class="view" style="display:none">
-        <div class="panel">
-          <div class="section-title">Invoices</div>
-          <div id="invoiceList" style="margin-top:12px">
-            <!-- saved invoices -->
-          </div>
-        </div>
-      </div>
-
-      <!-- PRINTABLE TEMPLATE (preview) -->
-      <div id="view-printable" class="view" style="display:none">
-        <div class="panel">
-          <div class="section-title">Printable Template</div>
-          <div style="margin-top:12px">
-            <select id="printInvoiceSelect" class="input" style="width:260px"></select>
-            <button id="openPrintable" class="btn" style="margin-left:8px">Open</button>
-            <button id="downloadPDF" class="btn-outline" style="margin-left:8px">Print (Browser)</button>
-          </div>
-          <div style="margin-top:18px">
-            <div id="printPreview" style="border:1px solid #e7eef6;padding:12px;background:#fff"></div>
-          </div>
-        </div>
-      </div>
-
-    </div>
+    </main>
   </div>
-</div>
 
-<!-- PRINT AREA TEMPLATE (hidden) -->
-<template id="invoicePrintTpl">
-  <div class="print-area" style="font-family:Arial,Helvetica,sans-serif;color:#111;padding:12px">
-    <div style="text-align:center;font-weight:800;font-size:20px">JBS KNIT WEAR</div>
-    <div style="text-align:center;font-size:12px;margin-top:4px">3(2)/2B, Nesavalar Colony 2nd Street, P.N.Road, Tirupur - 641602</div>
-    <div style="text-align:center;font-weight:700;margin-top:6px">GSTIN: 33CKAPJ7513F1ZK</div>
-    <hr style="margin:10px 0">
-    <div style="display:flex;justify-content:space-between">
-      <div>
-        <div>Date: <span id="p_date"></span></div>
-        <div>Invoice ID: <span id="p_inv"></span></div>
-        <div>Customer: <span id="p_cust"></span></div>
-        <div>Phone: <span id="p_phone"></span></div>
-        <div>Payment: <span id="p_pay"></span></div>
-      </div>
-    </div>
-    <table style="width:100%;border-collapse:collapse;margin-top:12px;font-size:13px">
-      <thead><tr><th style="border:1px solid #999;padding:6px">#</th><th style="border:1px solid #999;padding:6px">Product</th><th style="border:1px solid #999;padding:6px">Qty</th><th style="border:1px solid #999;padding:6px">Rate</th><th style="border:1px solid #999;padding:6px">Amount</th></tr></thead>
-      <tbody id="p_rows"></tbody>
-    </table>
-    <div style="text-align:right;font-weight:700;margin-top:12px">Total: ₹<span id="p_total"></span></div>
-    <div style="margin-top:18px;font-size:12px">For JBS KNIT WEAR</div>
-  </div>
-</template>
+  <!-- Hidden print area used by print function -->
+  <div id="printArea" style="display:none"></div>
 
-<script>
-/* ---------------------
-  Simple client-side state using localStorage
-   - invoices: [ {id,date,customer,payment,rows:[{desc,qty,rate,amount}],total} ]
-   - transactions: [ {id,date,type,category,pay,amount} ]
-----------------------*/
-const STORAGE = {
-  invoices: 'billing_invoices_v1',
-  transactions: 'billing_transactions_v1',
-  opening_today: 'billing_opening_today_v1'
-};
-
-let STATE = {
-  invoices: JSON.parse(localStorage.getItem(STORAGE.invoices) || '[]'),
-  transactions: JSON.parse(localStorage.getItem(STORAGE.transactions) || '[]')
-};
-
-/* utils */
-function saveState(){
-  localStorage.setItem(STORAGE.invoices, JSON.stringify(STATE.invoices));
-  localStorage.setItem(STORAGE.transactions, JSON.stringify(STATE.transactions));
-}
-function uid(prefix='id'){ return prefix + Date.now() + Math.floor(Math.random()*999); }
-function money(v){ return '₹' + Number(v||0).toFixed(2); }
-function fmtDate(d){
-  if(!d) return '';
-  const dt = new Date(d);
-  if (isNaN(dt)) return d;
-  return dt.toLocaleDateString();
-}
-
-/* sidebar nav */
-const navButtons = document.querySelectorAll('#nav button');
-function showView(name){
-  document.querySelectorAll('.view').forEach(v=>v.style.display='none');
-  const el = document.getElementById('view-'+name);
-  if(el) el.style.display='block';
-  navButtons.forEach(b=>b.classList.toggle('active', b.getAttribute('data-view')===name));
-  // scroll small screens to top of main area
-  if(window.innerWidth < 1000) window.scrollTo({top:0,behavior:'smooth'});
-}
-navButtons.forEach(btn=>{
-  btn.addEventListener('click', ()=> showView(btn.dataset.view));
-});
-
-/* mobile sidebar toggle */
-const menuToggle = document.getElementById('menuToggle');
-const sidebar = document.getElementById('sidebar');
-if(menuToggle){
-  menuToggle.addEventListener('click', ()=> sidebar.classList.toggle('open'));
-}
-window.addEventListener('resize', ()=> { if(window.innerWidth >= 1000) sidebar.classList.remove('open'); });
-
-/* Opening balance controls */
-function setOpening(val){
-  localStorage.setItem(STORAGE.opening_today, String(val));
-  alert('Opening balance set: ₹' + Number(val||0).toFixed(2));
-  renderDashboard();
-}
-document.getElementById('setOpening').addEventListener('click', ()=> setOpening(document.getElementById('openingInput').value));
-document.getElementById('setOpeningDesktop').addEventListener('click', ()=> setOpening(document.getElementById('openingInputDesktop').value));
-document.getElementById('clearOpening').addEventListener('click', ()=> { localStorage.removeItem(STORAGE.opening_today); alert('Opening cleared'); renderDashboard(); });
-document.getElementById('clearOpeningDesktop').addEventListener('click', ()=> { localStorage.removeItem(STORAGE.opening_today); alert('Opening cleared'); renderDashboard(); });
-
-/* Dashboard render */
-function renderDashboard(){
-  // totals from transactions (income/expense) + invoices (sales)
-  let income=0, expense=0;
-  STATE.transactions.forEach(t => {
-    const a = Number(t.amount||0);
-    if(String(t.type).toLowerCase()==='income') income += a;
-    else expense += a;
-  });
-  // invoices: treat as income
-  STATE.invoices.forEach(inv => income += Number(inv.total||0));
-  document.getElementById('totalIncome').innerText = money(income);
-  document.getElementById('totalExpense').innerText = money(expense);
-  document.getElementById('profitSmall').innerText = money(income - expense);
-  document.getElementById('profitDisplay').innerText = money(income - expense);
-
-  // recent transactions list (last 6)
-  const recent = STATE.transactions.slice().reverse().slice(0,6);
-  const tbody = document.getElementById('recentTransBody');
-  tbody.innerHTML = '';
-  if(!recent.length){ tbody.innerHTML = '<tr><td colspan="4" class="muted">No recent transactions</td></tr>'; return; }
-  recent.forEach(r=>{
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${fmtDate(r.date)}</td><td>${r.type}</td><td>${r.category||''}</td><td class="right">${money(r.amount)}</td>`;
-    tbody.appendChild(tr);
-  });
-}
-renderDashboard();
-
-/* Transactions logic */
-const txnTableBody = document.getElementById('txnTableBody');
-function renderTransactions(filter={}){
-  let rows = STATE.transactions.slice().reverse();
-  if(filter.type && filter.type!=='all') rows = rows.filter(r=>r.type===filter.type);
-  if(filter.pay && filter.pay!=='all') rows = rows.filter(r=>r.pay===filter.pay);
-  if(filter.from) rows = rows.filter(r=> new Date(r.date) >= new Date(filter.from));
-  if(filter.to) rows = rows.filter(r=> new Date(r.date) <= new Date(filter.to));
-  txnTableBody.innerHTML = '';
-  if(!rows.length){ txnTableBody.innerHTML = '<tr><td colspan="5" class="muted">No transactions added</td></tr>'; return; }
-  rows.forEach(r=>{
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${fmtDate(r.date)}</td><td>${r.type}</td><td>${r.category}</td><td>${r.pay}</td><td class="right">${money(r.amount)}</td>`;
-    txnTableBody.appendChild(tr);
-  });
-}
-renderTransactions({});
-
-/* add transaction */
-document.getElementById('txnAddBtn').addEventListener('click', ()=>{
-  const type = document.getElementById('txnType').value;
-  const category = document.getElementById('txnCategory').value || (type==='income'?'sales':'expense');
-  const amount = Number(document.getElementById('txnAmount').value || 0);
-  const date = document.getElementById('txnDate').value || new Date().toISOString();
-  const pay = document.getElementById('txnPay').value || 'Cash';
-  if(!amount){ alert('Enter valid amount'); return; }
-  const rec = { id: uid('tx'), date, type, category, pay, amount };
-  STATE.transactions.push(rec);
-  saveState();
-  renderTransactions({});
-  renderDashboard();
-  alert('Transaction added');
-});
-
-/* transaction filter buttons */
-document.getElementById('txnFilterBtn').addEventListener('click', ()=>{
-  renderTransactions({
-    from: document.getElementById('filterFrom').value,
-    to: document.getElementById('filterTo').value,
-    type: document.getElementById('filterType').value,
-    pay: document.getElementById('filterPay').value
-  });
-});
-document.getElementById('txnClearFilterBtn').addEventListener('click', ()=> {
-  document.getElementById('filterFrom').value='';
-  document.getElementById('filterTo').value='';
-  document.getElementById('filterType').value='all';
-  document.getElementById('filterPay').value='all';
-  renderTransactions({});
-});
-
-/* CSV helpers */
-function csvEscape(v){
-  if(v===null||v===undefined) return '';
-  v = String(v);
-  if(v.includes(',')||v.includes('"')||v.includes('\n')) v = `"${v.replace(/"/g,'""')}"`;
-  return v;
-}
-function downloadCSV(filename, csv){
-  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
-  URL.revokeObjectURL(url);
-}
-
-/* Exports */
-/* Export all transactions CSV */
-document.getElementById('exportAllTransactions').addEventListener('click', ()=> {
-  const header = ['id','date','type','category','pay','amount'].join(',');
-  const rows = STATE.transactions.map(t => [csvEscape(t.id), csvEscape(t.date), csvEscape(t.type), csvEscape(t.category), csvEscape(t.pay), Number(t.amount).toFixed(2)].join(','));
-  const csv = header + '\n' + rows.join('\n');
-  downloadCSV('transactions_all.csv', csv);
-});
-
-/* export invoices by payment method */
-function exportInvoicesByPayment(method){
-  const header = ['invoiceId','date','customer','payment','line','product','qty','rate','amount','invoiceTotal'].join(',');
-  const rows = [];
-  STATE.invoices.forEach(inv=>{
-    if(String(inv.payment).toLowerCase() === String(method).toLowerCase()){
-      (inv.rows || []).forEach((r, idx)=>{
-        rows.push([ csvEscape(inv.id), csvEscape(inv.date), csvEscape(inv.customer), csvEscape(inv.payment),
-                    idx+1, csvEscape(r.desc), Number(r.qty||0), Number(r.rate||0).toFixed(2), Number(r.amount||0).toFixed(2), Number(inv.total||0).toFixed(2)
-                  ].join(','));
-      });
-    }
-  });
-  if(!rows.length){ alert('No invoices found for ' + method); return; }
-  downloadCSV('invoices_'+method+'.csv', header + '\n' + rows.join('\n'));
-}
-
-/* export transactions incomes by pay */
-function exportTransactionIncomesByPayment(method){
-  const header = ['id','date','type','category','pay','amount'].join(',');
-  const rows = STATE.transactions.filter(t=> String(t.type).toLowerCase()==='income' && String(t.pay).toLowerCase() === String(method).toLowerCase())
-                .map(t => [csvEscape(t.id), csvEscape(t.date), csvEscape(t.type), csvEscape(t.category), csvEscape(t.pay), Number(t.amount).toFixed(2)].join(','));
-  if(!rows.length){ console.warn('No transaction incomes for ' + method); }
-  downloadCSV('transactions_incomes_'+method+'.csv', header + '\n' + rows.join('\n'));
-}
-
-/* combined export (invoices + transaction incomes) */
-function exportSalesForPayment(method){
-  exportInvoicesByPayment(method);
-  exportTransactionIncomesByPayment(method);
-}
-document.getElementById('exportCashSalesTop').addEventListener('click', ()=> exportSalesForPayment('Cash'));
-document.getElementById('exportGPaySalesTop').addEventListener('click', ()=> exportSalesForPayment('GPay'));
-document.getElementById('exportCashFromTx').addEventListener('click', ()=> exportTransactionIncomesByPayment('Cash'));
-document.getElementById('exportGPayFromTx').addEventListener('click', ()=> exportTransactionIncomesByPayment('GPay'));
-document.getElementById('exportTxCSV').addEventListener('click', ()=> {
-  document.getElementById('exportAllTransactions').click();
-});
-
-/* --------- Create Invoice logic ---------- */
-const prodList = document.getElementById('prodList');
-function newProductRow(data){
-  const id = uid('row');
-  const row = document.createElement('div');
-  row.className = 'row';
-  row.dataset.id = id;
-  row.innerHTML = `
-    <div class="sno">${data?.sno||''}</div>
-    <div class="desc"><input class="input" placeholder="Product description" style="width:100%" value="${data?.desc||''}"></div>
-    <div class="qty"><input type="number" min="0" class="input" value="${data?.qty||0}" style="width:80px;text-align:center"></div>
-    <div class="rate"><input type="number" min="0" class="input" value="${data?.rate||0}" style="width:100px;text-align:center"></div>
-    <div class="disc"><input type="number" min="0" class="input" value="${data?.disc||0}" style="width:70px;text-align:center"></div>
-    <div class="amount">${money(0)}</div>
-    <div style="width:24px;text-align:center"><button class="btn-outline removeRow">x</button></div>
-  `;
-  // event listeners
-  row.querySelectorAll('.input').forEach(inp=>{
-    inp.addEventListener('input', ()=> recalcRow(row));
-  });
-  row.querySelector('.removeRow').addEventListener('click', ()=> {
-    row.remove(); recalcTotals(); updateRowNumbers();
-  });
-  prodList.appendChild(row);
-  updateRowNumbers();
-  return row;
-}
-function updateRowNumbers(){
-  Array.from(prodList.querySelectorAll('.row')).forEach((r,i)=> r.querySelector('.sno').innerText = i+1);
-}
-function addProduct(data){
-  newProductRow(data);
-  recalcTotals();
-}
-document.getElementById('addProd').addEventListener('click', ()=> addProduct({desc:'',qty:0,rate:0,disc:0}));
-document.getElementById('clearProd').addEventListener('click', ()=> { prodList.innerHTML=''; recalcTotals(); });
-document.getElementById('recalc').addEventListener('click', ()=> recalcTotals());
-
-function recalcRow(row){
-  const qty = Number(row.querySelector('.qty input').value || 0);
-  const rate = Number(row.querySelector('.rate input').value || 0);
-  const disc = Number(row.querySelector('.disc input').value || 0);
-  let amt = qty * rate;
-  if(disc) amt = amt - (amt * Number(disc)/100);
-  row.querySelector('.amount').innerText = money(amt);
-  recalcTotals();
-}
-
-function recalcTotals(){
-  const taxPct = Number(document.getElementById('invTax').value || 0);
-  let subtotal = Array.from(prodList.querySelectorAll('.row')).reduce((s,row)=>{
-    const amtText = row.querySelector('.amount').innerText.replace(/[^0-9.-]+/g,"");
-    return s + Number(amtText || 0);
-  },0);
-  const tax = subtotal * (taxPct/100);
-  const total = subtotal + tax;
-  document.getElementById('invSubtotal').innerText = money(subtotal);
-  document.getElementById('invTotal').innerText = money(total);
-}
-
-/* Save Invoice */
-document.getElementById('saveInvoice').addEventListener('click', ()=>{
-  const invNo = document.getElementById('invNo').value || ('INV-' + (STATE.invoices.length+1));
-  const date = document.getElementById('invDate').value || new Date().toISOString();
-  const customer = document.getElementById('invCustomer').value || '';
-  const payment = document.getElementById('invPayment').value||'Cash';
-  const rows = Array.from(prodList.querySelectorAll('.row')).map(r=>{
-    const desc = r.querySelector('.desc input').value || '';
-    const qty = Number(r.querySelector('.qty input').value || 0);
-    const rate = Number(r.querySelector('.rate input').value || 0);
-    const disc = Number(r.querySelector('.disc input').value || 0);
-    const amount = Number(r.querySelector('.amount').innerText.replace(/[^0-9.-]+/g,""))||0;
-    return {desc, qty, rate, disc, amount};
-  });
-  const subtotal = rows.reduce((s,r)=>s + Number(r.amount||0), 0);
-  const tax = Number(document.getElementById('invTax').value || 0);
-  const total = subtotal + (subtotal * tax/100);
-  const invoice = { id: invNo, date, customer, payment, rows, subtotal, tax, total };
-  STATE.invoices.push(invoice);
-  saveState();
-  alert('Invoice saved: ' + invNo);
-  renderInvoicesList();
-  recalcTotals();
-  renderDashboard();
-});
-
-/* Print invoice: builds a printable window sized to 14x20cm portrait */
-document.getElementById('printInvoice').addEventListener('click', ()=> {
-  const invoiceData = {
-    id: document.getElementById('invNo').value || ('INV-' + (STATE.invoices.length+1)),
-    date: document.getElementById('invDate').value || new Date().toISOString(),
-    customer: document.getElementById('invCustomer').value || '',
-    payment: document.getElementById('invPayment').value || 'Cash',
-    phone: '', rows: Array.from(prodList.querySelectorAll('.row')).map(r=>{
-      return {desc: r.querySelector('.desc input').value || '', qty: Number(r.querySelector('.qty input').value || 0), rate: Number(r.querySelector('.rate input').value || 0), amount: Number(r.querySelector('.amount').innerText.replace(/[^0-9.-]+/g,""))||0};
-    }),
-    total: Number(document.getElementById('invTotal').innerText.replace(/[^0-9.-]+/g,""))||0
+  <!-- script: storage, UI wiring, logic -->
+  <script>
+  /***********************
+    Persistent app state & helpers (migration + soft-delete + backup)
+  ************************/
+  const APP_STORAGE_KEY = 'billing_app_v1';
+  const DEFAULT_STATE = {
+    invoices: [],
+    transactions: [],
+    deletedInvoices: [],
+    meta: { createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
   };
-  openPrintWindow(invoiceData);
-});
 
-/* open printable window (portrait 14cm x 20cm) */
-function openPrintWindow(inv){
-  const tpl = document.getElementById('invoicePrintTpl').content.cloneNode(true);
-  tpl.getElementById('p_date').innerText = fmtDate(inv.date);
-  tpl.getElementById('p_inv').innerText = inv.id;
-  tpl.getElementById('p_cust').innerText = inv.customer;
-  tpl.getElementById('p_phone').innerText = inv.phone || '';
-  tpl.getElementById('p_pay').innerText = inv.payment;
-  const tbody = tpl.querySelector('#p_rows');
-  inv.rows.forEach((r,i)=>{
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td style="border:1px solid #999;padding:6px">${i+1}</td><td style="border:1px solid #999;padding:6px">${r.desc}</td><td style="border:1px solid #999;padding:6px;text-align:center">${r.qty}</td><td style="border:1px solid #999;padding:6px;text-align:right">${Number(r.rate).toFixed(2)}</td><td style="border:1px solid #999;padding:6px;text-align:right">${Number(r.amount).toFixed(2)}</td>`;
-    tbody.appendChild(tr);
-  });
-  tpl.getElementById('p_total').innerText = Number(inv.total||0).toFixed(2);
+  function migrateOldKeys(){
+    try{
+      const oldInvoiceKey = 'billing_invoices_v1';
+      const oldTxKey = 'billing_transactions_v1';
+      const existing = JSON.parse(localStorage.getItem(APP_STORAGE_KEY) || 'null');
+      if(existing) return existing;
+      const newState = JSON.parse(JSON.stringify(DEFAULT_STATE));
+      const oldInvRaw = localStorage.getItem(oldInvoiceKey);
+      if(oldInvRaw){
+        try{ const p = JSON.parse(oldInvRaw); if(Array.isArray(p)) newState.invoices = p }catch(e){}
+      }
+      const oldTxRaw = localStorage.getItem(oldTxKey);
+      if(oldTxRaw){
+        try{ const p = JSON.parse(oldTxRaw); if(Array.isArray(p)) newState.transactions = p }catch(e){}
+      }
+      localStorage.setItem(APP_STORAGE_KEY, JSON.stringify(newState));
+      return newState;
+    }catch(e){ console.error('migrate err',e); return JSON.parse(JSON.stringify(DEFAULT_STATE)); }
+  }
 
-  const w = window.open('', '_blank', 'width=800,height=1100');
-  w.document.write('<!doctype html><html><head><title>Invoice</title>');
-  w.document.write('<meta name="viewport" content="width=device-width,initial-scale=1">');
-  w.document.write('<style>@page{size:14cm 20cm;margin:10mm}body{font-family:Arial;}</style>');
-  w.document.write('</head><body>');
-  w.document.body.appendChild(tpl);
-  w.document.write('</body></html>');
-  w.document.close();
-  // wait then print
-  setTimeout(()=> { w.focus(); w.print(); }, 500);
-}
+  let STATE;
+  try{
+    const raw = localStorage.getItem(APP_STORAGE_KEY);
+    if(raw){ STATE = JSON.parse(raw);
+      if(!STATE.invoices) STATE.invoices=[]; if(!STATE.transactions) STATE.transactions=[]; if(!STATE.deletedInvoices) STATE.deletedInvoices=[]; if(!STATE.meta) STATE.meta={updatedAt:new Date().toISOString()};
+    } else {
+      STATE = migrateOldKeys() || JSON.parse(JSON.stringify(DEFAULT_STATE));
+    }
+  } catch(err){
+    console.error('Failed to read app storage',err);
+    STATE = JSON.parse(JSON.stringify(DEFAULT_STATE));
+    localStorage.setItem(APP_STORAGE_KEY, JSON.stringify(STATE));
+  }
 
-/* Invoice list */
-function renderInvoicesList(){
-  const wrap = document.getElementById('invoiceList');
-  wrap.innerHTML = '';
-  if(!STATE.invoices.length) { wrap.innerHTML = '<div class="muted">No saved invoices</div>'; return;}
-  STATE.invoices.slice().reverse().forEach(inv=>{
-    const div = document.createElement('div');
-    div.className = 'invoice-card';
-    div.innerHTML = `<div style="display:flex;justify-content:space-between"><div><strong>${inv.id}</strong> <div class="muted" style="font-size:12px">${fmtDate(inv.date)} &nbsp; ${inv.customer || ''}</div></div><div style="text-align:right"><div style="font-weight:800">${money(inv.total)}</div><div class="muted" style="font-size:12px">${inv.payment}</div></div></div>
-      <div style="margin-top:8px;display:flex;gap:8px"><button class="btn-outline viewInv">View</button><button class="btn" style="background:#0b74ff;color:#fff" data-id="${inv.id}">Print</button></div>`;
-    wrap.appendChild(div);
-    div.querySelector('.viewInv').addEventListener('click', ()=>{
-      // open printable preview
-      const preview = document.getElementById('printPreview');
-      preview.innerHTML = '<em>loading...</em>';
-      setTimeout(()=> {
-        preview.innerHTML = `<div style="font-weight:700">${inv.id} - ${fmtDate(inv.date)}</div><div>${inv.customer||''} - ${inv.payment}</div><table style="width:100%;border-collapse:collapse;margin-top:8px"><thead><tr><th>#</th><th>Product</th><th>Qty</th><th>Rate</th><th>Amount</th></tr></thead><tbody>${(inv.rows||[]).map((r,i)=>`<tr><td>${i+1}</td><td>${r.desc}</td><td>${r.qty}</td><td>${Number(r.rate).toFixed(2)}</td><td>${Number(r.amount).toFixed(2)}</td></tr>`).join('')}</tbody></table><div style="text-align:right;margin-top:8px;font-weight:700">Total: ${money(inv.total)}</div>`;
-      },200);
-      showView('printable');
-      document.getElementById('printInvoiceSelect').value = inv.id;
+  function saveState(){ try{ STATE.meta.updatedAt = new Date().toISOString(); localStorage.setItem(APP_STORAGE_KEY, JSON.stringify(STATE)); }catch(e){console.error('persist fail',e);} }
+
+  function id(){ return 'id-'+Math.random().toString(36).slice(2,9); }
+
+  /* invoices management */
+  function addInvoice(inv){
+    if(!inv.id) inv.id = id();
+    STATE.invoices.push(inv);
+    saveState();
+    return inv.id;
+  }
+  function updateInvoice(updated){
+    const idx = STATE.invoices.findIndex(i=>i.id===updated.id);
+    if(idx>-1){ STATE.invoices[idx] = updated; saveState(); return true; }
+    return false;
+  }
+  function softDeleteInvoice(invoiceId,reason='deleted'){
+    const idx = STATE.invoices.findIndex(i=>i.id===invoiceId);
+    if(idx===-1) return false;
+    const rec = STATE.invoices.splice(idx,1)[0];
+    rec.deletedAt = new Date().toISOString(); rec.deletedReason = reason;
+    STATE.deletedInvoices.push(rec);
+    saveState(); return true;
+  }
+  function restoreInvoiceFromTrash(trashId){
+    const idx = STATE.deletedInvoices.findIndex(d=>d.id===trashId);
+    if(idx===-1) return false;
+    const rec = STATE.deletedInvoices.splice(idx,1)[0];
+    if(STATE.invoices.some(i=>i.id===rec.id)) rec.id = 'restored-'+id();
+    STATE.invoices.push(rec);
+    saveState(); return true;
+  }
+  function permanentPurgeDeleted(){ STATE.deletedInvoices=[]; saveState(); }
+  function exportBackup(){
+    try{
+      const payload = { exportedAt:new Date().toISOString(), state:STATE };
+      const blob = new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href=url; a.download = 'billing_backup_'+(new Date().toISOString().slice(0,19)).replace(/[:T]/g,'-')+'.json';
+      document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    }catch(e){ alert('Export failed: '+e) }
+  }
+  function importBackupFile(file){
+    return new Promise((resolve,reject)=>{
+      if(!file) return reject('No file');
+      const r = new FileReader();
+      r.onload = (ev)=>{
+        try{
+          const payload = JSON.parse(ev.target.result);
+          if(!payload || !payload.state) return reject('Invalid file');
+          const incoming = payload.state;
+          (incoming.invoices||[]).forEach(inv=>{
+            if(!STATE.invoices.find(i=>i.id===inv.id) && !STATE.deletedInvoices.find(d=>d.id===inv.id)) STATE.invoices.push(inv);
+            else { inv.id = inv.id + '-import-' + Date.now(); STATE.invoices.push(inv); }
+          });
+          (incoming.transactions||[]).forEach(tx=>{
+            if(!STATE.transactions.find(t=>t.id===tx.id)) STATE.transactions.push(tx); else { tx.id = tx.id + '-import-' + Date.now(); STATE.transactions.push(tx); }
+          });
+          (incoming.deletedInvoices||[]).forEach(d=>{
+            if(!STATE.deletedInvoices.find(dd=>dd.id===d.id)) STATE.deletedInvoices.push(d); else { d.id = d.id + '-import-' + Date.now(); STATE.deletedInvoices.push(d); }
+          });
+          saveState();
+          resolve({ok:true});
+        }catch(err){ reject('Parse error: '+err) }
+      };
+      r.onerror = ()=>reject('Read error');
+      r.readAsText(file);
     });
-    div.querySelector('button.btn').addEventListener('click', ()=>{
-      openPrintWindow(inv);
+  }
+
+  // transactions
+  function addTransaction(tx){ tx.id = tx.id || id(); STATE.transactions.push(tx); saveState(); }
+
+  // expose helpers to console
+  window.APP = { STATE, saveState, addInvoice, updateInvoice, softDeleteInvoice, restoreInvoiceFromTrash, permanentPurgeDeleted, exportBackup, importBackupFile, addTransaction };
+
+  /***********************
+    UI wiring & rendering
+  ************************/
+  const views = ['dashboard','transactions','create','invoices','printable'];
+  function showView(name){
+    views.forEach(v => document.getElementById('view-'+v).style.display = (v===name?'block':'none'));
+    // mark active nav
+    Array.from(document.querySelectorAll('#nav a')).forEach(a=>a.classList.remove('active'));
+    const navItem = document.querySelector('#nav a[data-view="'+name+'"]');
+    if(navItem) navItem.classList.add('active');
+    // scroll small screens to top
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+  document.querySelectorAll('#nav a').forEach(a=>{
+    a.addEventListener('click', e=>{
+      e.preventDefault();
+      const v = a.getAttribute('data-view'); if(v) showView(v);
     });
   });
-}
-renderInvoicesList();
-
-/* populate print select */
-function populatePrintSelect(){
-  const sel = document.getElementById('printInvoiceSelect');
-  sel.innerHTML = '<option value="">Select invoice</option>';
-  STATE.invoices.forEach(inv => {
-    const opt = document.createElement('option'); opt.value = inv.id; opt.text = inv.id + ' — ' + (inv.customer||inv.date);
-    sel.appendChild(opt);
+  document.getElementById('menuToggle').addEventListener('click',()=>{
+    const sb = document.getElementById('sidebar');
+    if(window.innerWidth < 760){ sb.style.display = sb.style.display==='none'?'block':'none'; }
   });
-}
-populatePrintSelect();
 
-document.getElementById('openPrintable').addEventListener('click', ()=>{
-  const id = document.getElementById('printInvoiceSelect').value;
-  if(!id){ alert('Select invoice'); return; }
-  const inv = STATE.invoices.find(i=>i.id===id);
-  if(!inv) { alert('Invoice not found'); return; }
-  openPrintWindow(inv);
-});
-document.getElementById('downloadPDF').addEventListener('click', ()=> window.print());
+  // open import file picker
+  document.getElementById('importBtn').addEventListener('click', ()=>document.getElementById('importFile').click());
+  document.getElementById('exportBackupBtn').addEventListener('click', ()=>{ exportBackup(); });
 
-/* Invoice init: create 4 empty rows by default */
-function initCreateInvoice(){
-  prodList.innerHTML='';
-  for(let i=0;i<4;i++) addProduct({desc:'Product description', qty:0, rate:0, disc:0});
-  document.getElementById('invDate').value = new Date().toISOString().slice(0,10);
-  document.getElementById('invNo').value = 'INV-' + (STATE.invoices.length + 1);
-  recalcTotals();
-}
-initCreateInvoice();
-
-/* quick add total button */
-document.getElementById('quickAddBtn').addEventListener('click', ()=>{
-  const t = Number(document.getElementById('quickTotal').value || 0);
-  if(!t){ alert('Enter amount'); return; }
-  const rec = { id: uid('tx'), date: new Date().toISOString(), type:'income', category:'quick', pay:'Cash', amount: t };
-  STATE.transactions.push(rec); saveState(); renderTransactions({}); renderDashboard(); alert('Added quick total to transactions');
-});
-
-/* Invoice reset */
-document.getElementById('resetInvoice').addEventListener('click', ()=> {
-  if(confirm('Reset invoice form?')) initCreateInvoice();
-});
-
-/* Export buttons on create view (also available earlier) */
-document.getElementById('exportCashFromTx').addEventListener('click', ()=> exportTransactionIncomesByPayment('Cash'));
-document.getElementById('exportGPayFromTx').addEventListener('click', ()=> exportTransactionIncomesByPayment('GPay'));
-
-/* On page load - wire nav default to dashboard */
-showView('dashboard');
-
-/* Render initial transaction table */
-renderTransactions({});
-
-/* Ensure invoice list and print select are kept up-to-date when invoices changed */
-window.addEventListener('storage', ()=> {
-  STATE.invoices = JSON.parse(localStorage.getItem(STORAGE.invoices) || '[]');
-  STATE.transactions = JSON.parse(localStorage.getItem(STORAGE.transactions) || '[]');
-  renderInvoicesList();
-  populatePrintSelect();
-  renderDashboard();
-});
-
-/* Expose export cash/gpay for top buttons also */
-document.getElementById('exportCashSalesTop').addEventListener('click', ()=> exportSalesForPayment('Cash'));
-document.getElementById('exportGPaySalesTop').addEventListener('click', ()=> exportSalesForPayment('GPay'));
-
-/* small UX: if user opens create invoice on small screens, close sidebar */
-document.querySelectorAll('#nav button').forEach(b=>{
-  b.addEventListener('click', ()=>{
-    if(window.innerWidth < 1000) sidebar.classList.remove('open');
+  document.getElementById('importFile').addEventListener('change', (e)=>{
+    const f = e.target.files[0];
+    if(!f) return;
+    importBackupFile(f).then(()=>{ alert('Import success'); renderAll(); }).catch(err=> alert('Import failed: '+err));
   });
-});
 
-/* render once more */
-renderInvoicesList();
-populatePrintSelect();
-renderDashboard();
-</script>
+  // Trash UI
+  function renderTrash(){
+    const el = document.getElementById('trashList'), tc = document.getElementById('trashCount');
+    el.innerHTML = '';
+    const list = STATE.deletedInvoices.slice().reverse();
+    tc.textContent = list.length;
+    if(list.length===0){ el.innerHTML = '<div class="muted small">Trash is empty</div>'; return; }
+    list.forEach(item=>{
+      const div = document.createElement('div'); div.className='list-row';
+      div.innerHTML = `
+        <div>
+          <div style="font-weight:700">${item.customer||'—'}</div>
+          <div class="muted small">${new Date(item.date||item.createdAt||Date()).toLocaleString()}</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <div class="muted small">₹${(item.total||0).toFixed(2)}</div>
+          <button class="btn alt" data-id="${item.id}" data-action="restore">Restore</button>
+          <button class="btn warn" data-id="${item.id}" data-action="purge">Delete</button>
+        </div>
+      `;
+      el.appendChild(div);
+    });
+    el.querySelectorAll('button[data-action="restore"]').forEach(b => {
+      b.addEventListener('click', e=>{
+        const id = b.getAttribute('data-id'); if(restoreInvoiceFromTrash(id)){ renderAll(); alert('Restored'); } else alert('Restore failed');
+      });
+    });
+    el.querySelectorAll('button[data-action="purge"]').forEach(b=>{
+      b.addEventListener('click', e=>{
+        const id = b.getAttribute('data-id');
+        if(confirm('Permanently delete this invoice from trash?')) {
+          STATE.deletedInvoices = STATE.deletedInvoices.filter(d=>d.id!==id); saveState(); renderAll();
+        }
+      });
+    });
+  }
+  document.getElementById('openTrash').addEventListener('click', ()=>{ showView('dashboard'); renderTrash(); });
+
+  /***********************
+   Dashboard render
+  ************************/
+  function renderDashboard(){
+    const income = STATE.transactions.filter(t=>t.type==='income').reduce((s,t)=>s+Number(t.amount||0),0);
+    const expense = STATE.transactions.filter(t=>t.type==='expense').reduce((s,t)=>s+Number(t.amount||0),0);
+    document.getElementById('totalIncome').textContent = income.toFixed(2);
+    document.getElementById('totalExpense').textContent = expense.toFixed(2);
+    document.getElementById('profit').textContent = (income - expense).toFixed(2);
+
+    // recent tx (right)
+    const recent = STATE.transactions.slice(-5).reverse();
+    const rightT = document.getElementById('rightRecentTx');
+    rightT.innerHTML = '';
+    if(recent.length===0) rightT.innerHTML = '<tr><td colspan="4" class="muted small">No recent transactions</td></tr>';
+    else recent.forEach(tx => {
+      const tr = document.createElement('tr');
+      const d = new Date(tx.date||tx.createdAt||Date()).toLocaleDateString();
+      tr.innerHTML = `<td>${d}</td><td>${tx.type}</td><td>${tx.category||''}</td><td>₹${Number(tx.amount||0).toFixed(2)}</td>`;
+      rightT.appendChild(tr);
+    });
+
+    // main recent table
+    const recT = document.getElementById('recentTx');
+    recT.innerHTML = '';
+    const recAll = STATE.transactions.slice(-6).reverse();
+    if(recAll.length===0) recT.innerHTML = '<tr><td colspan="4" class="muted small">No recent transactions</td></tr>';
+    else recAll.forEach(tx=>{
+      const tr = document.createElement('tr');
+      const d = new Date(tx.date||tx.createdAt||Date()).toLocaleDateString();
+      tr.innerHTML = `<td>${d}</td><td>${tx.type}</td><td>${tx.category||''}</td><td>₹${Number(tx.amount||0).toFixed(2)}</td>`;
+      recT.appendChild(tr);
+    });
+
+    renderTrash();
+  }
+
+  /***********************
+    Transactions UI
+  ************************/
+  function renderTransactions(filterOpts){
+    const tbody = document.getElementById('txTable');
+    tbody.innerHTML = '';
+    let list = STATE.transactions.slice().reverse();
+    if(filterOpts){
+      if(filterOpts.type && filterOpts.type!=='all') list = list.filter(t=>t.type===filterOpts.type);
+      if(filterOpts.from) list = list.filter(t=> new Date(t.date||t.createdAt||0) >= new Date(filterOpts.from));
+      if(filterOpts.to) list = list.filter(t=> new Date(t.date||t.createdAt||0) <= new Date(filterOpts.to));
+    }
+    if(list.length===0) { tbody.innerHTML = '<tr><td colspan="6" class="muted">No transactions added</td></tr>'; return; }
+    list.forEach(tx=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${new Date(tx.date||tx.createdAt).toLocaleDateString()}</td><td>${tx.type}</td><td>${tx.category||''}</td><td>${tx.pay||''}</td><td>₹${Number(tx.amount||0).toFixed(2)}</td>
+        <td style="text-align:right"><button class="btn alt" data-id="${tx.id}" data-action="delTx">Delete</button></td>`;
+      tbody.appendChild(tr);
+    });
+    tbody.querySelectorAll('button[data-action="delTx"]').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        const id = b.getAttribute('data-id');
+        if(confirm('Delete transaction?')){ STATE.transactions = STATE.transactions.filter(t=>t.id!==id); saveState(); renderTransactions(); renderDashboard(); }
+      });
+    });
+  }
+
+  document.getElementById('txAdd').addEventListener('click', ()=>{
+    const type = document.getElementById('txType').value;
+    const cat = document.getElementById('txCategory').value.trim()|| (type==='income'?'sales':'expense');
+    const amount = Number(document.getElementById('txAmount').value||0);
+    if(!amount){ alert('Enter amount'); return; }
+    const date = document.getElementById('txDate').value || new Date().toISOString();
+    const pay = document.getElementById('txPay').value || 'Cash';
+    addTransaction({ id:id(), type, category:cat, amount, date, pay, createdAt:new Date().toISOString() });
+    document.getElementById('txAmount').value=''; document.getElementById('txCategory').value='';
+    renderTransactions(); renderDashboard();
+  });
+
+  document.getElementById('filterBtn').addEventListener('click', ()=>{
+    const from = document.getElementById('filterFrom').value || null;
+    const to = document.getElementById('filterTo').value || null;
+    const type = document.getElementById('filterType').value || 'all';
+    renderTransactions({from,to,type});
+  });
+  document.getElementById('clearFilter').addEventListener('click', ()=>{
+    document.getElementById('filterFrom').value=''; document.getElementById('filterTo').value=''; document.getElementById('filterType').value='all';
+    renderTransactions();
+  });
+
+  // CSV export for transactions (all or filtered)
+  function downloadCSV(rows, filename='transactions.csv'){
+    if(!rows || rows.length===0){ alert('No rows'); return; }
+    const keys = Object.keys(rows[0]);
+    const csv = [keys.join(',')].concat(rows.map(r=>keys.map(k=>`"${String(r[k]||'').replace(/"/g,'""')}"`).join(','))).join('\n');
+    const blob = new Blob([csv],{type:'text/csv'}), url=URL.createObjectURL(blob), a=document.createElement('a');
+    a.href=url; a.download=filename; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  }
+  document.getElementById('downloadTxCsv').addEventListener('click', ()=>{
+    if(STATE.transactions.length===0){ alert('No transactions'); return; }
+    downloadCSV(STATE.transactions.map(t=>({date:t.date||t.createdAt,type:t.type,category:t.category,pay:t.pay,amount:t.amount})), 'transactions.csv');
+  });
+
+  // Dashboard right CSV (quick export)
+  document.getElementById('exportCsvBtn').addEventListener('click', ()=>{
+    if(STATE.transactions.length===0){ alert('No transactions'); return; }
+    downloadCSV(STATE.transactions.map(t=>({date:t.date||t.createdAt,type:t.type,category:t.category,pay:t.pay,amount:t.amount})), 'transactions.csv');
+  });
+
+  /***********************
+    Invoice / Create UI
+  ************************/
+  const productsContainer = document.getElementById('productsContainer');
+  function makeProductRow(index, data){
+    const row = document.createElement('div'); row.className = 'prod-row'; row.dataset.index = index;
+    const productName = data?.name||'';
+    const qty = Number(data?.qty||0);
+    const rate = Number(data?.rate||0);
+    const disc = Number(data?.disc||0);
+    const amount = Math.max(0,(qty * rate) * (1 - (disc/100)));
+    row.innerHTML = `
+      <div class="num">${index}</div>
+      <div><input type="text" class="input prod-name" placeholder="Product description" value="${productName}"></div>
+      <div><input type="number" min="0" class="input prod-qty" value="${qty}"></div>
+      <div><input type="number" min="0" class="input prod-rate" value="${rate}"></div>
+      <div><input type="number" min="0" class="input prod-disc" value="${disc}"></div>
+      <div style="text-align:right">₹<span class="prod-amount">${amount.toFixed(2)}</span> <button style="margin-left:8px" class="btn alt small remove-btn">x</button></div>
+    `;
+    // events
+    row.querySelectorAll('.prod-qty, .prod-rate, .prod-disc, .prod-name').forEach(el=>{
+      el.addEventListener('input', ()=>{ recalcRow(row); recalcTotals(); });
+    });
+    row.querySelector('.remove-btn').addEventListener('click', ()=>{
+      row.remove(); renumberProducts(); recalcTotals();
+    });
+    return row;
+  }
+  function recalcRow(row){
+    const q = Number(row.querySelector('.prod-qty').value||0);
+    const r = Number(row.querySelector('.prod-rate').value||0);
+    const d = Number(row.querySelector('.prod-disc').value||0);
+    const a = Math.max(0, q * r * (1 - d/100));
+    row.querySelector('.prod-amount').textContent = a.toFixed(2);
+  }
+  function renumberProducts(){
+    Array.from(productsContainer.querySelectorAll('.prod-row')).forEach((r,i)=> r.querySelector('.num').textContent = (i+1));
+  }
+  function recalcTotals(){
+    const rows = Array.from(productsContainer.querySelectorAll('.prod-row'));
+    const subtotal = rows.reduce((s,r)=> s + Number(r.querySelector('.prod-amount').textContent||0), 0);
+    const taxPct = Number(document.getElementById('taxPct').value||0);
+    const tax = subtotal * (taxPct/100);
+    const total = subtotal + tax;
+    document.getElementById('subtotal').textContent = subtotal.toFixed(2);
+    document.getElementById('taxAmount').textContent = tax.toFixed(2);
+    document.getElementById('invoiceTotal').textContent = total.toFixed(2);
+  }
+  function addProduct(data){
+    const idx = productsContainer.querySelectorAll('.prod-row').length + 1;
+    const r = makeProductRow(idx, data);
+    productsContainer.appendChild(r);
+    recalcTotals();
+  }
+  function loadCreateDefaults(){
+    // ensure at least 4 rows (like original)
+    if(productsContainer.children.length===0){
+      for(let i=0;i<4;i++) addProduct({});
+    }
+  }
+  document.getElementById('addProductBtn').addEventListener('click', ()=> addProduct({}));
+  document.getElementById('clearProducts').addEventListener('click', ()=>{
+    if(confirm('Clear product rows?')){ productsContainer.innerHTML=''; loadCreateDefaults(); recalcTotals(); }
+  });
+  document.getElementById('recalcTotals').addEventListener('click', recalcTotals);
+  document.getElementById('taxPct').addEventListener('input', recalcTotals);
+
+  // Save invoice
+  document.getElementById('saveInvoice').addEventListener('click', ()=>{
+    const invNo = document.getElementById('invoiceNo').value.trim() || ('INV-'+Date.now());
+    const date = document.getElementById('invoiceDate').value || new Date().toISOString();
+    const customer = document.getElementById('customerName').value.trim();
+    const paymentMethod = document.getElementById('paymentMethod').value;
+    const rows = Array.from(productsContainer.querySelectorAll('.prod-row')).map((r,i)=>({
+      sn: i+1,
+      name: r.querySelector('.prod-name').value || '',
+      qty: Number(r.querySelector('.prod-qty').value||0),
+      rate: Number(r.querySelector('.prod-rate').value||0),
+      disc: Number(r.querySelector('.prod-disc').value||0),
+      amount: Number(r.querySelector('.prod-amount').textContent||0)
+    }));
+    const subtotal = Number(document.getElementById('subtotal').textContent||0);
+    const tax = Number(document.getElementById('taxAmount').textContent||0);
+    const total = Number(document.getElementById('invoiceTotal').textContent||0);
+    const invoice = { id: id(), invNo, date, customer, paymentMethod, rows, subtotal, tax, total, createdAt:new Date().toISOString() };
+    addInvoice(invoice);
+    // also create transaction for accounting (sales as income)
+    addTransaction({ id: id(), type:'income', category:'sales', amount: total, date, pay: paymentMethod, createdAt:new Date().toISOString() });
+    alert('Saved invoice');
+    renderAll(); showView('invoices');
+  });
+
+  // Print invoice: will open printable window showing template (portrait)
+  document.getElementById('printInvoice').addEventListener('click', ()=>{
+    // build printable content for current values
+    const invNo = document.getElementById('invoiceNo').value.trim() || ('INV-'+Date.now());
+    const date = document.getElementById('invoiceDate').value || new Date().toISOString();
+    const customer = document.getElementById('customerName').value.trim();
+    const paymentMethod = document.getElementById('paymentMethod').value;
+    const rows = Array.from(productsContainer.querySelectorAll('.prod-row')).map((r,i)=>({
+      sn: i+1,
+      name: r.querySelector('.prod-name').value || '',
+      qty: Number(r.querySelector('.prod-qty').value||0),
+      rate: Number(r.querySelector('.prod-rate').value||0),
+      amount: Number(r.querySelector('.prod-amount').textContent||0)
+    }));
+    const html = buildPrintableHTML({invNo,date,customer,paymentMethod,rows,subtotal:document.getElementById('subtotal').textContent,tax:document.getElementById('taxAmount').textContent,total:document.getElementById('invoiceTotal').textContent});
+    const w = window.open('','_blank');
+    w.document.write(html); w.document.close();
+    // auto print
+    setTimeout(()=> w.print(), 500);
+  });
+
+  function buildPrintableHTML(inv){
+    // portrait 14cm x 20cm CSS included inline
+    const rowsHtml = (inv.rows||[]).map(r=>`<tr><td style="width:10%">${r.sn}</td><td style="width:50%">${escapeHtml(r.name)}</td><td style="width:10%;text-align:center">${r.qty}</td><td style="width:15%;text-align:right">${Number(r.rate||0).toFixed(2)}</td><td style="text-align:right;width:15%">${Number(r.amount||0).toFixed(2)}</td></tr>`).join('');
+    const html = `
+      <!doctype html><html><head><meta charset="utf-8"><title>Invoice ${escapeHtml(inv.invNo)}</title>
+      <style>
+        @page { size:14cm 20cm portrait; margin:10mm; }
+        body{font-family:Arial,Helvetica,sans-serif;color:#111;padding:0;margin:0}
+        .wrap{padding:8mm}
+        h1{font-size:22px;margin:0 0 6px}
+        .meta{margin-top:8px;font-size:13px}
+        table{width:100%;border-collapse:collapse;margin-top:12px}
+        td,th{padding:6px;border:1px solid #ddd;font-size:12px}
+        .right{text-align:right}
+      </style></head>
+      <body><div class="wrap">
+      <h1>JBS KNIT WEAR</h1>
+      <div class="meta">Date: ${escapeHtml((new Date(inv.date)).toLocaleDateString())}<br>Invoice ID: ${escapeHtml(inv.invNo)}<br>Customer: ${escapeHtml(inv.customer||'')}</div>
+      <table>
+        <thead><tr><th>#</th><th>Product</th><th>Qty</th><th style="text-align:right">Rate</th><th style="text-align:right">Amount</th></tr></thead>
+        <tbody>${rowsHtml}</tbody>
+      </table>
+      <div style="margin-top:10px;text-align:right;font-weight:800">Total: ₹${escapeHtml(Number(inv.total||0).toFixed(2))}</div>
+      <div style="margin-top:20px">Payment: ${escapeHtml(inv.paymentMethod||'Cash')}</div>
+      </div></body></html>`;
+    return html;
+  }
+
+  function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  document.getElementById('resetInvoice').addEventListener('click', ()=>{
+    if(confirm('Reset invoice form?')){ document.getElementById('invoiceNo').value=''; document.getElementById('invoiceDate').value=''; document.getElementById('customerName').value=''; productsContainer.innerHTML=''; loadCreateDefaults(); recalcTotals(); }
+  });
+
+  /***********************
+    Invoices list & printable
+  ************************/
+  function renderInvoicesList(){
+    const el = document.getElementById('invoiceList'); el.innerHTML = '';
+    if(STATE.invoices.length===0) { el.innerHTML = '<div class="muted">No invoices saved</div>'; return; }
+    STATE.invoices.slice().reverse().forEach(inv=>{
+      const div = document.createElement('div'); div.className='list-row';
+      div.innerHTML = `<div>
+        <div style="font-weight:700">${inv.invNo} — ${inv.customer||'—'}</div>
+        <div class="muted small">${new Date(inv.date||inv.createdAt).toLocaleString()}</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <div class="muted small">₹${Number(inv.total||0).toFixed(2)}</div>
+        <button class="btn alt" data-id="${inv.id}" data-action="view">View</button>
+        <button class="btn" data-id="${inv.id}" data-action="print">Print</button>
+        <button class="btn warn" data-id="${inv.id}" data-action="del">Delete</button>
+      </div>`;
+      el.appendChild(div);
+    });
+    el.querySelectorAll('button[data-action="view"]').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        const id=b.dataset.id; const inv = STATE.invoices.find(i=>i.id===id);
+        if(!inv) return alert('Not found');
+        const html = buildPrintableHTML({invNo:inv.invNo,date:inv.date,customer:inv.customer,paymentMethod:inv.paymentMethod,rows:inv.rows,subtotal:inv.subtotal,tax:inv.tax,total:inv.total});
+        document.getElementById('printPreview').innerHTML = `<div class="card print-area">${html}</div>`;
+        showView('printable');
+      });
+    });
+    el.querySelectorAll('button[data-action="print"]').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        const id=b.dataset.id; const inv = STATE.invoices.find(i=>i.id===id);
+        if(!inv) return alert('Not found');
+        const html = buildPrintableHTML({invNo:inv.invNo,date:inv.date,customer:inv.customer,paymentMethod:inv.paymentMethod,rows:inv.rows,subtotal:inv.subtotal,tax:inv.tax,total:inv.total});
+        const w = window.open('','_blank'); w.document.write(html); w.document.close(); setTimeout(()=>w.print(),500);
+      });
+    });
+    el.querySelectorAll('button[data-action="del"]').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        if(!confirm('Move invoice to trash?')) return;
+        const id = b.dataset.id; softDeleteInvoice(id); renderAll();
+      });
+    });
+  }
+
+  /***********************
+    Helpers on load render & opening balance
+  ************************/
+  document.getElementById('setOpening').addEventListener('click', ()=>{
+    const v = Number(document.getElementById('openingInput').value||0);
+    localStorage.setItem('opening_today', String(v));
+    alert('Opening balance set: ₹'+v.toFixed(2));
+  });
+  document.getElementById('clearOpening').addEventListener('click', ()=>{ localStorage.removeItem('opening_today'); alert('Cleared'); });
+
+  // restore old data if present (migration done earlier), update UI
+  function renderAll(){
+    renderDashboard(); renderTransactions(); renderInvoicesList(); loadCreateDefaults(); recalcTotals();
+    // update trash count
+    document.getElementById('trashCount').textContent = STATE.deletedInvoices.length;
+  }
+
+  // on load
+  window.addEventListener('load', ()=>{
+    renderAll();
+  });
+
+  /***********************
+    Utility: CSV per payment method
+  ************************/
+  function exportByPaymentMethod(){
+    const cash = STATE.transactions.filter(t=>t.pay==='Cash');
+    const gpay = STATE.transactions.filter(t=>t.pay==='GPay');
+    if(cash.length===0 && gpay.length===0) return alert('No transactions');
+    if(cash.length) downloadCSV(cash.map(t=>({date:t.date||t.createdAt,type:t.type,category:t.category,pay:t.pay,amount:t.amount})), 'cash_sales.csv');
+    if(gpay.length) downloadCSV(gpay.map(t=>({date:t.date||t.createdAt,type:t.type,category:t.category,pay:t.pay,amount:t.amount})), 'gpay_sales.csv');
+  }
+  // plugin button that user asked:
+  // create quick export button or tie to export CSV in header if needed
+  // but we expose a convenience function to console: window.exportByPaymentMethod()
+  window.exportByPaymentMethod = exportByPaymentMethod;
+
+  </script>
 </body>
 </html>
