@@ -11,9 +11,11 @@
       --sidebar-w:260px; --container-max:1200px;
     }
     *{box-sizing:border-box}
-    body{margin:0;font-family:Inter,system-ui,Roboto,Arial;background:var(--bg);color:#0f1720}
+    html,body{height:100%}
+    body{margin:0;font-family:Inter,system-ui,Roboto,Arial;background:var(--bg);color:#0f1720;-webkit-font-smoothing:antialiased}
     a{color:var(--accent)}
     .app{display:flex;min-height:100vh}
+
     /* Sidebar */
     .sidebar{width:var(--sidebar-w);background:linear-gradient(180deg,#fff,#fbfdff);padding:20px;border-right:1px solid rgba(15,23,36,0.03)}
     .brand{font-weight:800;font-size:16px;margin-bottom:6px}
@@ -33,6 +35,12 @@
     .title{font-weight:800;font-size:20px;margin:0}
     .muted{color:var(--muted);font-size:13px}
 
+    /* forms */
+    .input{padding:10px 12px;border-radius:8px;border:1px solid #e9f0f4;background:#fff;min-height:40px;font-size:14px}
+    .btn{padding:9px 12px;border-radius:8px;border:0;background:var(--accent);color:#fff;font-weight:700;cursor:pointer}
+    .btn.secondary{background:#fff;border:1px solid #e6eef3;color:#0f1720}
+    .btn.danger{background:#ff6b57;color:#fff}
+
     /* Dashboard */
     .dashboard-grid{display:grid;grid-template-columns:1fr 360px;gap:20px}
     .stats{display:flex;gap:14px;flex-wrap:wrap}
@@ -42,35 +50,72 @@
     .table th, .table td{padding:10px 12px;text-align:left}
     .table thead th{background:#fbfdff;border-bottom:1px solid #eef4f7}
 
-    /* Invoice form */
-    .invoice-form{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
-    .input{padding:10px 12px;border-radius:8px;border:1px solid #e9f0f4;background:#fff;min-height:40px}
-    .btn{padding:9px 12px;border-radius:8px;border:0;background:var(--accent);color:#fff;font-weight:700;cursor:pointer}
-    .btn.secondary{background:#fff;border:1px solid #e6eef3;color:#0f1720}
-    .btn.danger{background:#ff6b57}
-    .products{display:flex;flex-direction:column;gap:10px}
-    .prod-row{display:grid;grid-template-columns:40px 1fr 80px 80px 80px 48px;gap:10px;align-items:center;padding:10px;border-radius:10px;border:1px solid #eef4f7;background:#fff}
-    .prod-row input{border:0;background:transparent;padding:8px 10px;border-radius:6px;min-height:36px}
-    .prod-row .amount{font-weight:700;text-align:right;padding-right:8px}
+    /* Invoice form layout */
+    .invoice-form{max-width:960px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+    .form-row{display:flex;gap:12px;flex-wrap:wrap}
+    .form-row .input{flex:1;min-width:120px}
+
+    .products-section{margin-top:6px}
+    .products-actions{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:12px}
+    .products-actions .left{display:flex;gap:8px;align-items:center}
+
+    /* PRODUCT ROW - responsive grid that prevents overlap */
+    .products{display:flex;flex-direction:column;gap:12px}
+    .prod-row{
+      display:grid;
+      align-items:center;
+      gap:12px;
+      padding:12px;border-radius:10px;border:1px solid #eef4f7;background:#fff;
+      grid-template-columns:
+        48px               /* index */
+        minmax(220px, 1fr) /* description */
+        100px              /* qty */
+        120px              /* rate */
+        100px              /* disc */
+        90px               /* amount */
+        40px               /* remove button */;
+    }
+    .prod-row input{border:0;background:transparent;padding:8px 10px;border-radius:6px;min-height:36px;font-size:14px}
+    .prod-row .amount{font-weight:700;text-align:right;padding-right:6px}
+    .prod-row .remove{border:0;background:transparent;color:#999;cursor:pointer;font-weight:700}
+
+    /* totals */
     .totals{display:flex;flex-direction:column;gap:8px;align-items:flex-end;margin-top:6px}
 
-    /* Responsive */
-    @media (max-width:1100px){ .dashboard-grid{grid-template-columns:1fr 340px} }
-    @media (max-width:900px){
+    /* Responsive adjustments */
+    @media (max-width:1100px){
+      .dashboard-grid{grid-template-columns:1fr 320px}
+      .prod-row{grid-template-columns:
+        48px minmax(180px,1fr) 90px 100px 88px 80px 40px}
+    }
+    @media (max-width:860px){
       .app{flex-direction:column}
       .sidebar{position:fixed;left:0;top:0;bottom:0;transform:translateX(-120%);transition:transform .2s;z-index:40}
       .sidebar.open{transform:translateX(0)}
       .menu-toggle{display:inline-block}
       .main{padding:12px}
       .dashboard-grid{grid-template-columns:1fr;gap:12px}
-      .panel{box-shadow:none}
-      .invoice-form{max-width:100%}
+      /* product rows stack fields vertically on small screens */
+      .prod-row{
+        grid-template-columns: 48px 1fr;
+        grid-template-rows: auto auto;
+      }
+      .prod-row > :nth-child(1){grid-column:1 / 2; grid-row:1 / 2}
+      .prod-row > :nth-child(2){grid-column:2 / 3; grid-row:1 / 2}
+      .prod-row > :nth-child(3){grid-column:1 / 2; grid-row:2 / 3}
+      .prod-row > :nth-child(4){grid-column:2 / 3; grid-row:2 / 3}
+      .prod-row > :nth-child(5){grid-column:1 / 2; grid-row:3 / 4}
+      .prod-row > :nth-child(6){grid-column:2 / 3; grid-row:3 / 4}
+      .prod-row > :nth-child(7){grid-column:2 / 3; grid-row:1 / 4;justify-self:end}
     }
+
+    /* small fine tuning */
+    button{font-family:inherit}
   </style>
 </head>
 <body>
   <div class="app">
-    <aside id="sidebar" class="sidebar" aria-hidden="false">
+    <aside id="sidebar" class="sidebar">
       <div>
         <div class="brand">JBS KNIT WEAR — Billing</div>
         <div class="sub">Simple billing for retail</div>
@@ -89,7 +134,6 @@
 
     <div class="main">
       <div class="container">
-
         <div class="page-header">
           <div style="display:flex;align-items:center;gap:10px">
             <button id="menuToggle" class="menu-toggle">☰</button>
@@ -105,10 +149,9 @@
           </div>
         </div>
 
-        <!-- Dashboard view -->
+        <!-- Dashboard -->
         <section id="view-dashboard" class="panel">
           <div class="dashboard-grid">
-
             <div>
               <div style="display:flex;justify-content:space-between;align-items:flex-start">
                 <div>
@@ -143,11 +186,10 @@
                 <button id="openPrintable" class="btn secondary">Printable</button>
               </div>
             </div>
-
           </div>
         </section>
 
-        <!-- Transactions view -->
+        <!-- Transactions -->
         <section id="view-transactions" class="panel" style="display:none">
           <div style="font-weight:800;font-size:18px;margin-bottom:8px">Add Transaction</div>
           <div style="display:flex;gap:10px;flex-wrap:wrap">
@@ -158,32 +200,44 @@
           </div>
         </section>
 
-        <!-- Create invoice -->
+        <!-- Create -->
         <section id="view-create" class="panel" style="display:none">
           <div style="font-weight:800;font-size:18px;margin-bottom:6px">Create Invoice</div>
 
           <div class="invoice-form">
-            <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <div class="form-row">
               <input id="invoiceNo" class="input" placeholder="Invoice no (auto)" />
               <input id="invoiceDate" class="input" type="date" />
-              <input id="customerName" class="input" placeholder="Customer name" style="flex:1" />
+              <input id="customerName" class="input" placeholder="Customer name" />
             </div>
 
-            <div style="display:flex;justify-content:space-between;align-items:center">
-              <div style="font-weight:700">Products</div>
-              <div style="display:flex;gap:8px">
-                <button id="addProduct" class="btn">+ Add</button>
-                <button id="clearProducts" class="btn secondary">Clear</button>
-                <button id="recalc" class="btn secondary">Recalc</button>
+            <div class="products-section">
+              <div class="products-actions">
+                <div class="left">
+                  <div style="font-weight:700;margin-right:10px">Products</div>
+                  <button id="addProduct" class="btn">+ Add</button>
+                  <button id="clearProducts" class="btn secondary">Clear</button>
+                  <button id="recalc" class="btn secondary">Recalc</button>
+                </div>
+                <div id="right-sum" style="font-weight:800">₹0.00</div>
+              </div>
+
+              <div id="products" class="products">
+                <!-- product rows injected here -->
               </div>
             </div>
 
-            <div id="products" class="products"></div>
-
             <div class="totals">
-              <div style="display:flex;gap:10px;align-items:center"><div class="muted">Subtotal:</div><div id="subtotal" style="font-weight:800">₹0.00</div></div>
-              <div style="display:flex;gap:8px;align-items:center"><div class="muted">Tax %</div><input id="taxPercent" type="number" class="input" style="width:80px" value="0" /><div id="taxAmount">₹0.00</div></div>
-              <div style="display:flex;gap:12px;align-items:center"><div style="font-weight:700">Total</div><div id="total" style="font-weight:800">₹0.00</div></div>
+              <div style="display:flex;gap:10px;align-items:center;justify-content:flex-end">
+                <div class="muted">Subtotal:</div><div id="subtotal" style="font-weight:800">₹0.00</div>
+              </div>
+              <div style="display:flex;gap:8px;align-items:center;justify-content:flex-end">
+                <div class="muted">Tax %</div><input id="taxPercent" type="number" class="input" style="width:80px" value="0" />
+                <div id="taxAmount" style="font-weight:800">₹0.00</div>
+              </div>
+              <div style="display:flex;gap:12px;align-items:center;justify-content:flex-end">
+                <div style="font-weight:700">Total</div><div id="total" style="font-weight:800">₹0.00</div>
+              </div>
             </div>
 
             <div style="display:flex;gap:10px">
@@ -194,13 +248,13 @@
           </div>
         </section>
 
-        <!-- invoices list -->
+        <!-- Invoices -->
         <section id="view-invoices" class="panel" style="display:none">
           <div style="font-weight:800;font-size:18px;margin-bottom:8px">Saved Invoices</div>
           <div id="invoicesList" class="transactions"><div class="muted">No saved invoices</div></div>
         </section>
 
-        <!-- printable info -->
+        <!-- Printable -->
         <section id="view-printable" class="panel" style="display:none">
           <div style="font-weight:800;font-size:18px;margin-bottom:8px">Printable Template</div>
           <div class="muted">Open a saved invoice and click Print to open the printable version.</div>
@@ -211,67 +265,61 @@
   </div>
 
   <script>
-    // helper functions
-    function el(s){ return document.querySelector(s) }
-    function els(s){ return Array.from(document.querySelectorAll(s)) }
+    // small safe helpers
+    function el(q){ return document.querySelector(q) }
+    function els(q){ return Array.from(document.querySelectorAll(q)) }
     function money(v){ return '₹' + (Number(v||0)).toFixed(2) }
     function fmt(v){ return (Number(v||0)).toFixed(2) }
     function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') }
 
-    // state
     var state = { invoices: [], transactions: [], productsDefault: 4, opening: 0 }
 
-    // navigation
+    // NAV
     var navBtns = els('#nav button[data-view]')
     function showView(name){
       ['dashboard','transactions','create','invoices','printable'].forEach(function(v){
         var elv = document.getElementById('view-' + v)
-        if (elv) elv.style.display = (v === name) ? '' : 'none'
+        if (elv) elv.style.display = (v === name ? '' : 'none')
       })
       navBtns.forEach(function(b){ b.classList.toggle('active', b.dataset.view === name) })
       if (window.innerWidth < 900) document.getElementById('sidebar').classList.remove('open')
     }
     navBtns.forEach(function(b){ b.addEventListener('click', function(){ showView(b.dataset.view) }) })
-
-    // mobile menu toggle
-    document.getElementById('menuToggle').addEventListener('click', function(){
-      var sb = document.getElementById('sidebar')
-      if (sb.classList.contains('open')) sb.classList.remove('open'); else sb.classList.add('open')
-    })
-
+    document.getElementById('menuToggle').addEventListener('click', function(){ var sb = document.getElementById('sidebar'); sb.classList.toggle('open') })
     document.getElementById('openCreate').addEventListener('click', function(){ showView('create') })
     document.getElementById('openInvoices').addEventListener('click', function(){ showView('invoices') })
     document.getElementById('openPrintable').addEventListener('click', function(){ showView('printable') })
 
-    // PRODUCTS rows
-    var productsEl = document.getElementById('products')
+    // Products management
+    var productsEl = el('#products')
     function makeRow(index, data){
       data = data || {}
       var row = document.createElement('div'); row.className = 'prod-row'
-      row.innerHTML = ''
-        + '<div style="font-weight:700;color:var(--muted)">' + index + '</div>'
-        + '<div><input class="prod-desc" placeholder="Product description" value="' + escapeHtml(data.desc || '') + '" /></div>'
-        + '<div><input class="prod-qty" type="number" min="0" value="' + (data.qty || '') + '" /></div>'
-        + '<div><input class="prod-rate" type="number" min="0" step="0.01" value="' + (data.rate || '') + '" /></div>'
-        + '<div><input class="prod-disc" type="number" min="0" step="0.01" value="' + (data.disc || 0) + '" /></div>'
-        + '<div style="display:flex;flex-direction:column;align-items:flex-end"><div class="amount">' + money(data.amount || 0) + '</div><button class="remove" style="margin-top:6px;border:0;background:#fff;border-radius:6px;padding:6px;cursor:pointer">x</button></div>'
+      // create contents with safe values (no template backticks)
+      var idx = document.createElement('div'); idx.textContent = index
+      var descWrap = document.createElement('div'); descWrap.innerHTML = '<input class="prod-desc" placeholder="Product description" value="' + escapeHtml(data.desc||'') + '" />'
+      var qtyWrap = document.createElement('div'); qtyWrap.innerHTML = '<input class="prod-qty" type="number" min="0" value="' + (data.qty||'') + '" />'
+      var rateWrap = document.createElement('div'); rateWrap.innerHTML = '<input class="prod-rate" type="number" min="0" step="0.01" value="' + (data.rate||'') + '" />'
+      var discWrap = document.createElement('div'); discWrap.innerHTML = '<input class="prod-disc" type="number" min="0" step="0.01" value="' + (data.disc||0) + '" />'
+      var amtWrap = document.createElement('div'); amtWrap.innerHTML = '<div class="amount">' + money(data.amount||0) + '</div>'
+      var remWrap = document.createElement('div'); remWrap.innerHTML = '<button class="remove">x</button>'
+
+      row.appendChild(idx); row.appendChild(descWrap); row.appendChild(qtyWrap); row.appendChild(rateWrap); row.appendChild(discWrap); row.appendChild(amtWrap); row.appendChild(remWrap)
+
       var qty = row.querySelector('.prod-qty'), rate = row.querySelector('.prod-rate'), disc = row.querySelector('.prod-disc'), remove = row.querySelector('.remove')
       function update(){ recalcTotals() }
-      qty.addEventListener('input', update); rate.addEventListener('input', update); disc.addEventListener('input', update)
-      remove.addEventListener('click', function(){ row.parentNode.removeChild(row); rebuildIndices(); recalcTotals() })
+      qty.addEventListener('input', update)
+      rate.addEventListener('input', update)
+      disc.addEventListener('input', update)
+      remove.addEventListener('click', function(){ if(confirm('Remove this row?')){ row.parentNode.removeChild(row); rebuildIndices(); recalcTotals() }})
       return row
     }
-    function rebuildIndices(){
-      Array.from(productsEl.children).forEach(function(r,i){ r.querySelector('div').textContent = i+1 })
-    }
-    function initProducts(n){
-      productsEl.innerHTML = ''
-      for(var i=1;i<=n;i++){ productsEl.appendChild(makeRow(i)) }
-    }
-    document.getElementById('addProduct').addEventListener('click', function(){ productsEl.appendChild(makeRow(productsEl.children.length + 1)) })
-    document.getElementById('clearProducts').addEventListener('click', function(){ if (confirm('Clear rows?')){ initProducts(state.productsDefault); recalcTotals() } })
+    function rebuildIndices(){ Array.from(productsEl.children).forEach(function(r,i){ r.querySelector('div').textContent = i+1 }) }
+    function initProducts(n){ productsEl.innerHTML = ''; for(var i=1;i<=n;i++){ productsEl.appendChild(makeRow(i)) } }
+    el('#addProduct').addEventListener('click', function(){ productsEl.appendChild(makeRow(productsEl.children.length+1)); recalcTotals() })
+    el('#clearProducts').addEventListener('click', function(){ if(confirm('Clear product rows?')){ initProducts(state.productsDefault); recalcTotals() } })
 
-    // recalc totals
+    // totals logic
     function recalcTotals(){
       var subtotal = 0
       Array.from(productsEl.children).forEach(function(row){
@@ -283,18 +331,19 @@
         row.querySelector('.amount').textContent = money(amt)
         subtotal += amt
       })
-      document.getElementById('subtotal').textContent = money(subtotal)
-      var taxPct = Number(document.getElementById('taxPercent').value || 0)
+      el('#subtotal').textContent = money(subtotal)
+      el('#right-sum').textContent = money(subtotal)
+      var taxPct = Number(el('#taxPercent').value || 0)
       var taxAmt = subtotal * (taxPct / 100)
-      document.getElementById('taxAmount').textContent = money(taxAmt)
-      document.getElementById('total').textContent = money(subtotal + taxAmt)
+      el('#taxAmount').textContent = money(taxAmt)
+      el('#total').textContent = money(subtotal + taxAmt)
     }
-    document.getElementById('taxPercent').addEventListener('input', recalcTotals)
-    document.getElementById('recalc').addEventListener('click', recalcTotals)
+    el('#taxPercent').addEventListener('input', recalcTotals)
+    el('#recalc').addEventListener('click', recalcTotals)
 
     // collect invoice
     function collectInvoice(){
-      var inv = { id: document.getElementById('invoiceNo').value || '', date: document.getElementById('invoiceDate').value || (new Date().toISOString().slice(0,10)), customer: document.getElementById('customerName').value || '', rows: [], subtotal:0, tax:0, total:0 }
+      var inv = { id: el('#invoiceNo').value || '', date: el('#invoiceDate').value || (new Date().toISOString().slice(0,10)), customer: el('#customerName').value || '', rows: [], subtotal:0, tax:0, total:0 }
       Array.from(productsEl.children).forEach(function(row){
         var desc = row.querySelector('.prod-desc').value || ''
         var qty = Number(row.querySelector('.prod-qty').value || 0)
@@ -305,7 +354,7 @@
         inv.rows.push({ desc: desc, qty: qty, rate: rate, disc: disc, amount: amount })
         inv.subtotal += amount
       })
-      inv.tax = Number(document.getElementById('taxPercent').value || 0)
+      inv.tax = Number(el('#taxPercent').value || 0)
       inv.taxAmount = inv.subtotal * (inv.tax / 100)
       inv.total = inv.subtotal + inv.taxAmount
       return inv
@@ -314,22 +363,22 @@
     // save invoice (local fallback)
     function saveInvoice(){
       var inv = collectInvoice()
-      // try backend POST /api/invoices - if available (non-blocking try)
+      // attempt server save (non-blocking)
       try {
         fetch('/api/invoices', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(inv) }).then(function(res){
           if (res.ok){ alert('Saved to server'); loadSavedInvoices(); return }
-        }).catch(function(){ /* ignore */ })
+        }).catch(function(){})
       } catch(e){}
-      // fallback local
+      // local fallback
       inv.id = inv.id || ('local-' + Date.now())
       state.invoices.push(inv)
       localStorage.setItem('invoices', JSON.stringify(state.invoices))
       renderInvoices()
       alert('Saved locally: ' + inv.id)
     }
-    document.getElementById('saveInvoice').addEventListener('click', saveInvoice)
+    el('#saveInvoice').addEventListener('click', saveInvoice)
 
-    // printable HTML (string concatenation)
+    // printable html
     function printableHtml(inv){
       var rows = ''
       for(var i=0;i<inv.rows.length;i++){
@@ -349,8 +398,7 @@
       html += '</body></html>'
       return html
     }
-
-    document.getElementById('printInvoice').addEventListener('click', function(){
+    el('#printInvoice').addEventListener('click', function(){
       var inv = collectInvoice()
       var w = window.open('', '_blank')
       w.document.open()
@@ -358,7 +406,7 @@
       w.document.close()
     })
 
-    // reset data with typed confirmation
+    // reset data
     function resetData(){
       var txt = prompt("Type RESET to confirm permanent wipe of data:")
       if (txt !== 'RESET'){ alert('Reset cancelled (confirmation not matched).'); return }
@@ -366,27 +414,26 @@
       state.invoices = []; state.transactions = []
       renderInvoices(); renderDashboard()
       alert('All local data cleared.')
-      // try server reset (best effort)
       try { fetch('/api/reset', { method:'POST' }) } catch(e){}
     }
-    document.getElementById('resetData').addEventListener('click', resetData)
+    el('#resetData').addEventListener('click', resetData)
 
-    // transactions add
-    document.getElementById('addTx').addEventListener('click', function(){
-      var t = { date: (new Date().toISOString().slice(0,10)), type: document.getElementById('txType').value, category: document.getElementById('txCategory').value, amount: Number(document.getElementById('txAmount').value || 0) }
+    // transactions
+    el('#addTx').addEventListener('click', function(){
+      var t = { date: (new Date().toISOString().slice(0,10)), type: el('#txType').value, category: el('#txCategory').value, amount: Number(el('#txAmount').value || 0) }
       state.transactions.push(t)
       localStorage.setItem('transactions', JSON.stringify(state.transactions))
       renderDashboard()
       alert('Transaction saved')
     })
 
-    // load/save invoices
+    // load and render invoices
     function loadSavedInvoices(){
       try { state.invoices = JSON.parse(localStorage.getItem('invoices') || '[]') } catch(e){ state.invoices = [] }
     }
     function renderInvoices(){
       loadSavedInvoices()
-      var list = document.getElementById('invoicesList')
+      var list = el('#invoicesList')
       if (!state.invoices.length){ list.innerHTML = '<div class="muted">No saved invoices</div>'; return }
       var html = ''
       for(var i=0;i<state.invoices.length;i++){
@@ -400,16 +447,16 @@
       Array.from(list.querySelectorAll('.print')).forEach(function(b){ b.addEventListener('click', function(){ var id = b.dataset.id; var inv = state.invoices.find(function(x){ return x.id === id }); if (!inv) return alert('Not found'); var w = window.open(); w.document.open(); w.document.write(printableHtml(inv)); w.document.close() }) })
     }
 
-    // render dashboard
+    // dashboard render
     function renderDashboard(){
       var income = 0, expense = 0
       state.transactions.forEach(function(t){ if (t.type === 'income') income += Number(t.amount||0); if (t.type === 'expense') expense += Number(t.amount||0) })
-      document.getElementById('totalIncome').textContent = money(income)
-      document.getElementById('totalExpense').textContent = money(expense)
-      document.getElementById('totalProfit').textContent = money(income - expense)
-      document.getElementById('profitVal').textContent = 'Profit: ' + money(income - expense)
+      el('#totalIncome').textContent = money(income)
+      el('#totalExpense').textContent = money(expense)
+      el('#totalProfit').textContent = money(income - expense)
+      el('#profitVal').textContent = 'Profit: ' + money(income - expense)
 
-      var recent = document.getElementById('recentList'); recent.innerHTML = ''
+      var recent = el('#recentList'); recent.innerHTML = ''
       if (!state.transactions.length){
         recent.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--muted)">No recent transactions</td></tr>'
       } else {
@@ -423,25 +470,22 @@
       }
     }
 
-    // opening balance set/clear
-    document.getElementById('setOpening').addEventListener('click', function(){
-      state.opening = Number(document.getElementById('openingInput').value || 0)
+    // opening balance
+    el('#setOpening').addEventListener('click', function(){
+      state.opening = Number(el('#openingInput').value || 0)
       localStorage.setItem('opening', String(state.opening)); alert('Opening set: ' + money(state.opening))
     })
-    document.getElementById('clearOpening').addEventListener('click', function(){
-      state.opening = 0; document.getElementById('openingInput').value = '0.00'; localStorage.removeItem('opening'); alert('Opening cleared')
-    })
+    el('#clearOpening').addEventListener('click', function(){ state.opening = 0; el('#openingInput').value = '0.00'; localStorage.removeItem('opening'); alert('Opening cleared') })
 
     // init
     function init(){
       loadSavedInvoices()
       try { state.transactions = JSON.parse(localStorage.getItem('transactions') || '[]') } catch(e){ state.transactions = [] }
       renderDashboard(); renderInvoices()
-      document.getElementById('invoiceDate').value = (new Date()).toISOString().slice(0,10)
+      el('#invoiceDate').value = (new Date()).toISOString().slice(0,10)
       initProducts(state.productsDefault); recalcTotals()
       window.addEventListener('resize', function(){ if (window.innerWidth > 900) document.getElementById('sidebar').classList.remove('open') })
-      // wire nav to show dashboard at start
-      showView('dashboard')
+      showView('create') // open create view by default like your screenshot
     }
     init()
   </script>
