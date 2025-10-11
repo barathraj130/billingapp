@@ -1,258 +1,629 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>JBS KNIT WEAR — Billing</title>
-  <style>
-    :root{
-      --bg:#f3f7fb;--card:#fff;--accent:#1877f2;--muted:#889aa6;
-      --radius:12px;--shadow:0 10px 30px rgba(18,30,50,0.06);
-      --sidebar-w:260px;--container-max:1200px;
-    }
-    *{box-sizing:border-box}
-    body{margin:0;font-family:Inter,system-ui,Roboto,Arial;background:var(--bg);color:#0f1720}
-    a{color:var(--accent)}
-    .app{display:flex;min-height:100vh}
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>JBS KNIT WEAR — Billing</title>
 
-    /* Sidebar */
-    .sidebar{width:var(--sidebar-w);background:#fff;padding:20px;border-right:1px solid rgba(15,23,36,0.05)}
-    .brand{font-weight:800;font-size:16px;margin-bottom:6px}
-    .sub{color:var(--muted);font-size:13px;margin-bottom:14px}
-    .nav{display:flex;flex-direction:column;gap:6px}
-    .nav button{border:0;background:transparent;text-align:left;padding:10px 12px;border-radius:8px;cursor:pointer;font-weight:700}
-    .nav button small{display:block;font-weight:500;color:var(--muted);font-size:12px}
-    .nav button.active{background:rgba(24,119,242,0.08);border-left:4px solid var(--accent);padding-left:10px}
+<style>
+  /* ---------- Reset & base ---------- */
+  :root{
+    --bg:#f3f6f8;
+    --sidebar:#fff;
+    --card:#ffffff;
+    --muted:#8b95a3;
+    --brand:#1e90ff;
+    --accent:#ff6b50;
+    --radius:12px;
+    --shadow: 0 8px 22px rgba(13,30,40,0.06);
+    --container-max:1180px;
+    --sidebar-w:260px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;background:var(--bg);font-family:Inter, "Segoe UI", Roboto, Arial, sans-serif;color:#111}
+  a{color:inherit;text-decoration:none}
+  button{cursor:pointer}
+  /* ---------- Layout ---------- */
+  .app{min-height:100vh;display:flex;flex-direction:column}
+  header{height:64px;background:transparent;display:flex;align-items:center;padding:12px 20px;gap:12px}
+  .brand{font-weight:800;font-size:18px;margin-left:6px}
+  main{flex:1;display:flex;align-items:stretch}
+  .sidebar{
+    width:var(--sidebar-w);background:var(--sidebar);padding:20px;border-right:1px solid rgba(0,0,0,0.03);
+    box-shadow:var(--shadow);min-width:220px;
+  }
+  .sidebar .title{font-weight:800;margin-bottom:8px}
+  .nav{margin-top:12px;display:flex;flex-direction:column;gap:8px}
+  .nav button{background:transparent;border:none;text-align:left;padding:12px;border-radius:10px;color:#1f2b36;font-size:15px}
+  .nav button.small{font-size:13px;color:var(--muted)}
+  .nav button.active{background:linear-gradient(90deg,#eef8ff,#ffffff);box-shadow:0 6px 18px rgba(20,30,60,0.03);border-left:4px solid var(--brand);padding-left:14px}
+  /* Content area */
+  .wrapper{flex:1;padding:18px;display:flex;justify-content:center}
+  .container{width:100%;max-width:var(--container-max);display:grid;grid-template-columns:1fr 360px;gap:22px;align-items:start}
+  /* On small screens stack columns */
+  @media (max-width:980px){ .container{grid-template-columns:1fr} .sidebar{display:none} header .menu-toggle{display:block} }
+  @media (max-width:520px){ header{padding:8px} .brand{font-size:16px} }
 
-    /* Main */
-    .main{flex:1;padding:22px;display:flex;justify-content:center}
-    .container{width:100%;max-width:var(--container-max)}
-    .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
-    .menu-toggle{display:none;border:0;background:transparent;font-size:20px;cursor:pointer}
-    .opening{display:flex;gap:8px;align-items:center}
-    .panel{background:var(--card);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)}
-    .title{font-weight:800;font-size:20px;margin:0}
-    .muted{color:var(--muted);font-size:13px}
+  /* Card */
+  .card{background:var(--card);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)}
+  .h1{font-size:28px;margin:0 0 6px}
+  .muted{color:var(--muted);font-size:13px}
 
-    /* Inputs & Buttons */
-    .input{padding:10px 12px;border-radius:8px;border:1px solid #e9f0f4;background:#fff;min-height:40px;font-size:14px}
-    .btn{padding:9px 12px;border-radius:8px;border:0;background:var(--accent);color:#fff;font-weight:700;cursor:pointer}
-    .btn.secondary{background:#fff;border:1px solid #e6eef3;color:#0f1720}
-    .btn.danger{background:#ff6b57;color:#fff}
+  /* Dashboard card */
+  .stat-grid{display:flex;gap:12px;flex-wrap:wrap;margin-top:14px}
+  .stat{flex:1;min-width:180px;background:#fff;border-radius:10px;padding:18px;border:1px solid rgba(0,0,0,0.03)}
+  .stat .num{font-weight:800;font-size:20px;margin-top:6px}
 
-    /* Invoice grid */
-    .invoice-form{max-width:960px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
-    .form-row{display:flex;gap:12px;flex-wrap:wrap}
-    .form-row .input{flex:1;min-width:120px}
-    .products{display:flex;flex-direction:column;gap:10px;margin-top:8px}
-    .prod-row{display:grid;grid-template-columns:40px 1fr 100px 120px 100px 100px 40px;align-items:center;gap:10px;padding:10px;border-radius:10px;border:1px solid #eef4f7;background:#fff}
-    .prod-row input{border:0;background:transparent;padding:8px;border-radius:6px}
-    .prod-row .amount{text-align:right;font-weight:700}
-    .prod-row .remove{background:none;border:none;color:#999;cursor:pointer;font-weight:700}
-    .totals{display:flex;flex-direction:column;align-items:flex-end;gap:6px;margin-top:10px}
-    @media (max-width:900px){
-      .app{flex-direction:column}
-      .sidebar{position:fixed;left:0;top:0;bottom:0;transform:translateX(-120%);transition:transform .2s;z-index:50}
-      .sidebar.open{transform:translateX(0)}
-      .menu-toggle{display:inline-block}
-      .main{padding:10px}
-      .prod-row{grid-template-columns:1fr 80px 100px 80px 80px}
-    }
-  </style>
+  /* Recent transactions table (simple) */
+  .recent{margin-top:18px}
+  .table{width:100%;border-collapse:collapse}
+  .table th{background:transparent;text-align:left;padding:12px;color: #0f1720;font-weight:700}
+  .table td{padding:14px;border-top:1px solid rgba(0,0,0,0.04);color:#333}
+
+  /* Invoice form */
+  .panel{background:var(--card);border-radius:var(--radius);padding:22px;position:relative}
+  .form-row{display:flex;gap:12px;align-items:center;margin-bottom:12px}
+  .form-row .input{flex:1}
+  input[type="text"],input[type="number"],select{width:100%;padding:12px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);background:#fff}
+  input[type="date"]{padding:10px}
+  .btn{display:inline-block;padding:10px 14px;border-radius:8px;border:none;background:var(--brand);color:#fff;font-weight:700}
+  .btn.ghost{background:transparent;border:1px solid rgba(0,0,0,0.08);color:#333}
+  .btn.warn{background:var(--accent)}
+  .right{text-align:right}
+  .products{margin-top:10px}
+  .product-row{display:flex;align-items:center;gap:12px;padding:14px;border-radius:12px;border:1px solid rgba(0,0,0,0.04);background:#fff;margin-bottom:8px}
+  .prod-index{width:34px;flex:0 0 34px;text-align:center;color:var(--muted);font-weight:700}
+  .prod-desc{flex:1}
+  .prod-desc input{width:100%}
+  .prod-qty,.prod-rate,.prod-disc,.prod-amount{width:84px;flex:0 0 84px;text-align:center}
+  .prod-remove{flex:0 0 28px;text-align:center;color:var(--muted)}
+  /* totals block */
+  .totals{margin-top:14px;display:flex;justify-content:flex-end}
+  .totals .box{width:260px}
+  .totals .line{display:flex;justify-content:space-between;padding:6px 10px}
+  .totals .total{font-weight:800;font-size:18px}
+
+  /* footer buttons */
+  .actions{display:flex;gap:12px;margin-top:18px}
+
+  /* mobile header menu toggle */
+  header .menu-toggle{display:none;border:none;background:transparent;font-size:20px}
+  /* small screen adjustments */
+  @media (max-width:980px){
+    .sidebar{display:none}
+    .container{grid-template-columns:1fr}
+    .panel.rightcol{order:2}
+  }
+
+  /* Printable invoice basic style */
+  @media print {
+    body *{visibility:hidden}
+    #printable,*#printable *{visibility:visible}
+    #printable{position:fixed;left:0;top:0}
+  }
+
+  /* small refinements */
+  .note{font-size:13px;color:var(--muted);margin-top:6px}
+</style>
 </head>
 <body>
 <div class="app">
-  <aside id="sidebar" class="sidebar">
+  <header>
+    <button class="menu-toggle" id="menuToggle" aria-label="toggle menu">☰</button>
     <div class="brand">JBS KNIT WEAR — Billing</div>
-    <div class="sub">Simple billing for retail</div>
-    <nav class="nav" id="nav">
-      <button data-view="dashboard" class="active">Dashboard<small>Quick totals & recent</small></button>
-      <button data-view="transactions">Transactions<small>Income & expense add</small></button>
-      <button data-view="create">Create Invoice<small>Add products & save</small></button>
-      <button data-view="invoices">Invoices<small>Saved invoices</small></button>
-      <button data-view="printable">Printable<small>View / print</small></button>
-    </nav>
-    <div class="muted" style="margin-top:15px;">Tip: Save then Print from invoice view.</div>
-  </aside>
+    <div style="flex:1"></div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="muted" style="margin-right:6px">Opening balance (today)</div>
+      <input id="openingInput" type="number" step="0.01" style="width:120px;padding:8px;border-radius:8px;border:1px solid rgba(0,0,0,0.07)">
+      <button class="btn" id="setOpening">Set</button>
+      <button class="btn ghost" id="clearOpening">Clear</button>
+    </div>
+  </header>
 
-  <div class="main">
-    <div class="container">
-      <div class="page-header">
-        <div style="display:flex;align-items:center;gap:10px">
-          <button id="menuToggle" class="menu-toggle">☰</button>
-          <h1 class="title">Billing</h1>
-          <div class="muted">— manage invoices & quick sales</div>
+  <main>
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="title">JBS KNIT WEAR — <span class="muted">Billing</span></div>
+      <div class="nav" id="nav">
+        <button data-view="dashboard" class="active">Dashboard <div class="small muted">Quick totals & recent</div></button>
+        <button data-view="transactions">Transactions <div class="small muted">Income & expense add</div></button>
+        <button data-view="create">Create Invoice <div class="small muted">Add products & save</div></button>
+        <button data-view="invoices">Invoices <div class="small muted">Saved invoices list</div></button>
+        <button data-view="printable">Printable template <div class="small muted">View / print invoice</div></button>
+      </div>
+      <div style="margin-top:18px" class="note">Tip: Save then Print from the invoice view.</div>
+    </aside>
+
+    <!-- Main wrapper -->
+    <div class="wrapper">
+      <div class="container">
+
+        <!-- Content column (left) -->
+        <div class="content">
+
+          <!-- Dashboard view -->
+          <section id="view-dashboard" class="card panel" style="display:block">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div>
+                <h2 class="h1">Billing Dashboard</h2>
+                <div class="muted">Quick overview of today's totals and recent activity</div>
+              </div>
+              <div class="muted">Profit: <strong id="profitDisplay">₹0.00</strong></div>
+            </div>
+
+            <div class="stat-grid">
+              <div class="stat">
+                <div class="muted">Total Income</div>
+                <div class="num" id="incomeDisplay">₹0.00</div>
+              </div>
+              <div class="stat">
+                <div class="muted">Total Expense</div>
+                <div class="num" id="expenseDisplay">₹0.00</div>
+              </div>
+              <div class="stat">
+                <div class="muted">Profit</div>
+                <div class="num" id="profitBig">₹0.00</div>
+              </div>
+            </div>
+
+            <div class="recent">
+              <h3 style="margin-top:18px">Recent transactions</h3>
+              <table class="table" id="recentTable" style="background:#fff;border-radius:8px">
+                <thead><tr><th>Date</th><th>Type</th><th>Category</th><th>Amount</th></tr></thead>
+                <tbody id="recentBody"><tr><td colspan="4" style="padding:18px;color:var(--muted)">No recent transactions</td></tr></tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- Transactions placeholder -->
+          <section id="view-transactions" class="card panel" style="display:none">
+            <h2 class="h1">Transactions</h2>
+            <div class="muted">(Income & expense quick add) — placeholder</div>
+            <div style="margin-top:18px"><em>You can use 'Create Invoice' to enter income via sales.</em></div>
+          </section>
+
+          <!-- Create Invoice (main form) -->
+          <section id="view-create" class="panel card" style="display:none">
+            <h2 style="margin:0">Create Invoice <span class="muted" style="font-weight:500;margin-left:10px">— manage invoices & quick sales</span></h2>
+
+            <div style="display:flex;gap:12px;margin-top:14px;flex-wrap:wrap">
+              <input id="invoiceNo" class="input" type="text" placeholder="Invoice no (auto)" style="flex:1">
+              <input id="invoiceDate" class="input" type="date" style="width:160px">
+              <input id="customerName" class="input" type="text" placeholder="Customer name" style="flex:1">
+            </div>
+
+            <div style="margin-top:10px">
+              <label class="muted">Payment Method</label>
+              <select id="paymentMethod" style="margin-top:6px">
+                <option>Cash</option>
+                <option>GPay</option>
+              </select>
+            </div>
+
+            <div class="products">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px">
+                <div style="font-weight:700">Products</div>
+                <div>
+                  <button id="addProd" class="btn">+ Add</button>
+                  <button id="clearProds" class="btn ghost">Clear</button>
+                  <button id="recalc" class="btn ghost">Recalc</button>
+                </div>
+              </div>
+
+              <div id="productsList" style="margin-top:12px">
+                <!-- product rows generated here -->
+              </div>
+
+            </div>
+
+            <div class="totals">
+              <div class="box">
+                <div class="line"><div>Subtotal:</div><div id="subtotal">₹0.00</div></div>
+                <div class="line"><div>Tax %:</div><div style="display:flex;gap:8px;align-items:center"><input id="taxPct" type="number" min="0" step="0.01" style="width:100px;padding:8px;border-radius:8px;border:1px solid rgba(0,0,0,0.06)"><div id="taxAmt">₹0.00</div></div></div>
+                <div class="line total"><div>Total</div><div id="total">₹0.00</div></div>
+              </div>
+            </div>
+
+            <div class="actions">
+              <button id="saveInvoice" class="btn">Save</button>
+              <button id="printInvoice" class="btn ghost">Print</button>
+              <button id="resetApp" class="btn warn">Reset</button>
+            </div>
+
+          </section>
+
+          <!-- Saved invoices list -->
+          <section id="view-invoices" class="card panel" style="display:none">
+            <h2 class="h1">Saved invoices</h2>
+            <div id="invoicesList" style="margin-top:12px"></div>
+          </section>
+
+          <!-- Printable preview placeholder -->
+          <section id="view-printable" class="card panel" style="display:none">
+            <h2 class="h1">Printable template</h2>
+            <div class="muted">Generate printable invoice pages here.</div>
+          </section>
+
+        </div> <!-- end content -->
+
+        <!-- Right column: on desktop shows summary or quick form -->
+        <aside class="rightcol" id="rightcol">
+          <div class="card panel" style="position:sticky;top:20px">
+            <h3 style="margin:0">Quick invoice panel</h3>
+            <div class="muted" style="margin-bottom:10px">(also available in Create Invoice)</div>
+            <div style="display:flex;gap:10px;margin-bottom:8px">
+              <input id="quickTotal" class="input" type="text" placeholder="Quick total" style="flex:1;min-width:140px">
+              <button id="quickAdd" class="btn ghost">Add</button>
+            </div>
+            <div class="note">Use the left menu to open the full Create Invoice screen for editing and printing.</div>
+          </div>
+        </aside>
+
+      </div><!-- end container -->
+    </div><!-- end wrapper -->
+
+  </main>
+</div>
+
+<!-- Hidden printable template container (used to build print window content) -->
+<section id="printTemplate" style="display:none">
+  <!-- will be generated by JS -->
+</section>
+
+<script>
+/* ---------- Utilities ---------- */
+const money = (v)=> {
+  const n = Number(v)||0;
+  return '₹' + n.toFixed(2);
+}
+function el(sel){return document.querySelector(sel)}
+function elAll(sel){return Array.from(document.querySelectorAll(sel))}
+
+/* ---------- Navigation logic ---------- */
+const navButtons = document.querySelectorAll('.nav button');
+function setActive(view){
+  navButtons.forEach(b=> {
+    b.classList.toggle('active', b.dataset.view === view);
+    const vid = 'view-'+b.dataset.view;
+    const section = document.getElementById(vid);
+    if(section) section.style.display = (b.dataset.view === view)?'block':'none';
+  });
+}
+navButtons.forEach(b=>{
+  b.addEventListener('click', ()=> setActive(b.dataset.view));
+});
+setActive('dashboard'); // default
+
+/* menu toggle for small screens */
+document.getElementById('menuToggle').addEventListener('click', ()=>{
+  const sb = document.getElementById('sidebar');
+  if(getComputedStyle(sb).display === 'none') sb.style.display = 'block';
+  else sb.style.display = 'none';
+});
+
+/* ---------- App data ---------- */
+const STORAGE_KEY = 'billingapp_invoices_v1';
+const APP_STATE = {
+  invoices: JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'),
+  productsTemplateCount: 4
+}
+
+/* ---------- Dashboard helpers ---------- */
+function renderRecent(){
+  const recentBody = el('#recentBody');
+  const inv = APP_STATE.invoices.slice(-6).reverse();
+  if(inv.length === 0){
+    recentBody.innerHTML = '<tr><td colspan="4" style="padding:18px;color:var(--muted)">No recent transactions</td></tr>';
+    return;
+  }
+  recentBody.innerHTML = inv.map(x=>`<tr><td>${x.date}</td><td>income</td><td>sales</td><td>${money(x.total)}</td></tr>`).join('');
+  // simple totals
+  const income = APP_STATE.invoices.reduce((s,i)=> s + (i.total||0), 0);
+  el('#incomeDisplay').textContent = money(income);
+  el('#expenseDisplay').textContent = money(0);
+  el('#profitDisplay').textContent = money(income);
+  el('#profitBig').textContent = money(income);
+}
+
+/* ---------- Invoice form (Create Invoice) ---------- */
+const productsList = el('#productsList');
+let productRows = [];
+
+function newProductRow(index, item = {}){
+  const id = Math.random().toString(36).slice(2,9);
+  const row = document.createElement('div');
+  row.className = 'product-row';
+  row.dataset.id = id;
+  row.innerHTML = `
+    <div class="prod-index">${index}</div>
+    <div class="prod-desc"><input type="text" class="desc" placeholder="Product description" value="${(item.desc||'')}"></div>
+    <div class="prod-qty"><input type="number" class="qty" min="0" step="1" value="${(item.qty||0)}" style="width:100%;padding:6px;border-radius:6px;border:1px solid rgba(0,0,0,0.06)"></div>
+    <div class="prod-rate"><input type="number" class="rate" min="0" step="0.01" value="${(item.rate||0)}" style="width:100%;padding:6px;border-radius:6px;border:1px solid rgba(0,0,0,0.06)"></div>
+    <div class="prod-disc"><input type="number" class="disc" min="0" step="0.01" value="${(item.disc||0)}" style="width:100%;padding:6px;border-radius:6px;border:1px solid rgba(0,0,0,0.06)"></div>
+    <div class="prod-amount right">${money(0)}</div>
+    <div class="prod-remove"><button class="btn ghost remove">x</button></div>
+  `;
+  // events
+  row.querySelectorAll('input').forEach(inp=>{
+    inp.addEventListener('input', ()=> {
+      recalcTotals();
+    });
+  });
+  row.querySelector('.remove').addEventListener('click', ()=>{
+    productsList.removeChild(row);
+    rebuildRowIndexes();
+    recalcTotals();
+  });
+  return row;
+}
+function rebuildRowIndexes(){
+  Array.from(productsList.querySelectorAll('.product-row')).forEach((r,i)=>{
+    r.querySelector('.prod-index').textContent = i+1;
+  });
+}
+function initProductRows(count){
+  productsList.innerHTML = '';
+  for(let i=0;i<count;i++){
+    productsList.appendChild(newProductRow(i+1));
+  }
+  recalcTotals();
+}
+document.getElementById('addProd').addEventListener('click', ()=>{
+  const count = productsList.children.length + 1;
+  productsList.appendChild(newProductRow(count));
+});
+document.getElementById('clearProds').addEventListener('click', ()=>{
+  if(!confirm('Clear all product rows?')) return;
+  initProductRows(APP_STATE.productsTemplateCount);
+});
+document.getElementById('recalc').addEventListener('click', recalcTotals);
+
+function recalcTotals(){
+  let subtotal = 0;
+  Array.from(productsList.querySelectorAll('.product-row')).forEach(row=>{
+    const qty = Number(row.querySelector('.qty').value) || 0;
+    const rate = Number(row.querySelector('.rate').value) || 0;
+    const discPct = Number(row.querySelector('.disc').value) || 0;
+    let amt = qty * rate;
+    if(discPct>0) amt = amt * (1 - discPct/100);
+    subtotal += amt;
+    row.querySelector('.prod-amount').textContent = money(amt);
+  });
+  el('#subtotal').textContent = money(subtotal);
+  const taxPct = Number(el('#taxPct').value)||0;
+  const taxAmt = subtotal * taxPct/100;
+  el('#taxAmt').textContent = money(taxAmt);
+  const total = subtotal + taxAmt;
+  el('#total').textContent = money(total);
+}
+
+/* ---------- Save / Print / Reset ---------- */
+function collectInvoiceData(){
+  const rows = Array.from(productsList.querySelectorAll('.product-row')).map((row, i)=>({
+    index: i+1,
+    desc: row.querySelector('.desc').value,
+    qty: Number(row.querySelector('.qty').value)||0,
+    rate: Number(row.querySelector('.rate').value)||0,
+    disc: Number(row.querySelector('.disc').value)||0,
+    amount: Number((row.querySelector('.prod-amount').textContent||'').replace(/[₹,]/g,''))||0
+  }));
+  const subtotal = Number((el('#subtotal').textContent||'').replace(/[₹,]/g,''))||0;
+  const taxPct = Number(el('#taxPct').value)||0;
+  const taxAmt = Number((el('#taxAmt').textContent||'').replace(/[₹,]/g,''))||0;
+  const total = Number((el('#total').textContent||'').replace(/[₹,]/g,''))||0;
+  return {
+    id: Date.now(),
+    invoiceNo: el('#invoiceNo').value || '',
+    date: el('#invoiceDate').value || (new Date()).toISOString().slice(0,10),
+    customer: el('#customerName').value || '',
+    payment: el('#paymentMethod').value || 'Cash',
+    rows, subtotal, taxPct, taxAmt, total
+  }
+}
+
+document.getElementById('saveInvoice').addEventListener('click', ()=>{
+  recalcTotals();
+  const inv = collectInvoiceData();
+  // basic validation
+  if(inv.rows.every(r=>r.qty === 0 && r.rate === 0 && !r.desc.trim())){
+    alert('Add at least one product with qty or rate.');
+    return;
+  }
+  APP_STATE.invoices.push(inv);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(APP_STATE.invoices));
+  alert('Invoice saved (localStorage).');
+  renderRecent();
+  renderInvoicesList();
+});
+
+document.getElementById('printInvoice').addEventListener('click', ()=>{
+  recalcTotals();
+  const inv = collectInvoiceData();
+  // build printable HTML
+  const content = buildPrintable(inv);
+  const w = window.open('about:blank','_blank','toolbar=0,location=0,menubar=0');
+  w.document.open();
+  w.document.write(content);
+  w.document.close();
+  // autopopup print
+  setTimeout(()=>{ w.print(); }, 400);
+});
+
+/* Reset application data (clear localStorage) */
+function confirmReset(){
+  const txt = prompt("Type RESET to confirm permanent wipe of data:");
+  if(txt !== 'RESET'){ alert('Reset cancelled (confirmation not matched).'); return; }
+  localStorage.removeItem(STORAGE_KEY);
+  APP_STATE.invoices = [];
+  initProductRows(APP_STATE.productsTemplateCount);
+  renderRecent();
+  renderInvoicesList();
+  alert('All data cleared.');
+}
+document.getElementById('resetApp').addEventListener('click', confirmReset);
+
+/* Opening balance */
+document.getElementById('setOpening').addEventListener('click', ()=>{
+  const v = Number(el('#openingInput').value)||0;
+  localStorage.setItem('opening_today', String(v));
+  alert('Opening balance set: ' + money(v));
+});
+document.getElementById('clearOpening').addEventListener('click', ()=>{
+  localStorage.removeItem('opening_today');
+  el('#openingInput').value = '';
+  alert('Opening cleared');
+});
+
+/* ---------- Render saved invoices list ---------- */
+function renderInvoicesList(){
+  const wrap = el('#invoicesList');
+  if(APP_STATE.invoices.length === 0){
+    wrap.innerHTML = '<div class="muted">No invoices saved</div>';
+    return;
+  }
+  wrap.innerHTML = APP_STATE.invoices.map(inv=>`
+    <div class="card" style="padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-weight:700">Invoice ${inv.invoiceNo || inv.id}</div>
+        <div class="muted">${inv.date} • ${inv.customer || '—'}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-weight:700">${money(inv.total)}</div>
+        <div style="display:flex;gap:6px;margin-top:6px;justify-content:flex-end">
+          <button class="btn ghost" data-id="${inv.id}" onclick="openPrintableById(${inv.id})">Print</button>
+          <button class="btn ghost" data-id="${inv.id}" onclick="deleteInvoice(${inv.id})">Delete</button>
         </div>
-        <div class="opening">
-          <label class="muted">Opening balance</label>
-          <input id="openingInput" class="input" type="number" value="0" style="width:120px" />
-          <button id="setOpening" class="btn">Set</button>
-          <button id="clearOpening" class="btn secondary">Clear</button>
+      </div>
+    </div>
+  `).join('');
+}
+window.openPrintableById = function(id){
+  const inv = APP_STATE.invoices.find(i=>i.id === id);
+  if(!inv){ alert('Invoice not found'); return; }
+  const content = buildPrintable(inv);
+  const w = window.open('about:blank','_blank');
+  w.document.open();
+  w.document.write(content);
+  w.document.close();
+  setTimeout(()=>{ w.print(); }, 500);
+}
+window.deleteInvoice = function(id){
+  if(!confirm('Delete invoice permanently?')) return;
+  APP_STATE.invoices = APP_STATE.invoices.filter(i=> i.id !== id);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(APP_STATE.invoices));
+  renderInvoicesList();
+  renderRecent();
+}
+
+/* ---------- Printable builder (20cm x 14cm format) ---------- */
+function buildPrintable(inv){
+  // company details - adjust here
+  const company = {
+    name: 'JBS KNIT WEAR',
+    phone: 'Ph : 97919 02205',
+    address: '3(2)/2B, Nesavalar Colony 2nd Street, P.N.Road, Tirupur - 641 602.',
+    gst: 'GSTIN NUMBER: 33CKAPJ7513F1ZK'
+  };
+  // create items rows
+  let rowsHtml = '';
+  for(let i=0;i<(inv.rows.length||4);i++){
+    const r = inv.rows[i] || {index:i+1, desc:'', qty:0, rate:0, amount:0};
+    rowsHtml += `<tr>
+      <td style="padding:6px;border:1px solid #ddd;text-align:center">${r.index}</td>
+      <td style="padding:6px;border:1px solid #ddd">${r.desc}</td>
+      <td style="padding:6px;border:1px solid #ddd;text-align:center">${r.qty}</td>
+      <td style="padding:6px;border:1px solid #ddd;text-align:right">${Number(r.rate||0).toFixed(2)}</td>
+      <td style="padding:6px;border:1px solid #ddd;text-align:right">${Number(r.amount||0).toFixed(2)}</td>
+    </tr>`;
+  }
+
+  // Invoice CSS - set size 20cm x 14cm for printing
+  const css = `
+    <style>
+      @page { size: 20cm 14cm; margin: 10mm; }
+      body{font-family: Arial, Helvetica, sans-serif; font-size:12px; color:#111; margin:0}
+      .wrap{width:100%;height:100%}
+      h1{font-size:20px;margin:0}
+      .company{display:flex;justify-content:space-between;align-items:flex-start}
+      table{width:100%;border-collapse:collapse;margin-top:12px}
+      .right{text-align:right}
+      .small-muted{font-size:11px;color:#666}
+    </style>
+  `;
+
+  const html = `
+  <!doctype html>
+  <html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Invoice ${inv.invoiceNo || inv.id}</title>
+    ${css}
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="company">
+        <div>
+          <h1>${company.name}</h1>
+          <div class="small-muted">${company.address}</div>
+          <div class="small-muted">${company.phone}</div>
+          <div style="font-weight:700;margin-top:8px">${company.gst}</div>
+        </div>
+        <div style="text-align:right">
+          <div>Date: ${inv.date}</div>
+          <div>Invoice ID: ${inv.invoiceNo || inv.id}</div>
+          <div>Customer: ${inv.customer||'—'}</div>
+          <div>Payment: ${inv.payment||'—'}</div>
         </div>
       </div>
 
-      <!-- CREATE INVOICE -->
-      <section id="view-create" class="panel">
-        <div style="font-weight:800;font-size:18px;margin-bottom:6px">Create Invoice</div>
-        <div class="invoice-form">
-          <div class="form-row">
-            <input id="invoiceNo" class="input" placeholder="Invoice no (auto)">
-            <input id="invoiceDate" class="input" type="date">
-            <input id="customerName" class="input" placeholder="Customer name">
-          </div>
+      <table>
+        <thead>
+          <tr><th style="padding:6px;border:1px solid #ddd">#</th><th style="padding:6px;border:1px solid #ddd">Product</th><th style="padding:6px;border:1px solid #ddd">Qty</th><th style="padding:6px;border:1px solid #ddd">Rate</th><th style="padding:6px;border:1px solid #ddd">Amount</th></tr>
+        </thead>
+        <tbody>
+          ${rowsHtml}
+        </tbody>
+      </table>
 
-          <div class="form-row">
-            <label class="muted">Payment Method</label>
-            <select id="paymentMethod" class="input" style="width:160px">
-              <option value="Cash">Cash</option>
-              <option value="GPay">GPay</option>
-              <option value="Card">Card</option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
-
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
-            <div style="font-weight:700">Products</div>
-            <div>
-              <button id="addProduct" class="btn">+ Add</button>
-              <button id="clearProducts" class="btn secondary">Clear</button>
-              <button id="recalc" class="btn secondary">Recalc</button>
-            </div>
-          </div>
-
-          <div id="products" class="products"></div>
-
-          <div class="totals">
-            <div>Subtotal: <span id="subtotal" style="font-weight:700">₹0.00</span></div>
-            <div>Tax % <input id="taxPercent" type="number" class="input" style="width:80px" value="0"> 
-              <span id="taxAmount" style="font-weight:700">₹0.00</span></div>
-            <div>Total: <span id="total" style="font-weight:700">₹0.00</span></div>
-          </div>
-
-          <div style="display:flex;gap:10px;margin-top:10px">
-            <button id="saveInvoice" class="btn">Save</button>
-            <button id="printInvoice" class="btn secondary">Print</button>
-            <button id="resetData" class="btn danger">Reset</button>
-          </div>
-        </div>
-      </section>
-
-      <section id="view-invoices" class="panel" style="display:none">
-        <h3>Saved Invoices</h3>
-        <div id="invoicesList"></div>
-      </section>
-
+      <div style="margin-top:12px;font-weight:700">Total: ${money(inv.total)}</div>
     </div>
-  </div>
-</div>
-
-<script>
-const el = s=>document.querySelector(s);
-const money=v=>'₹'+(Number(v||0)).toFixed(2);
-const fmt=v=>(Number(v||0)).toFixed(2);
-const escapeHtml=s=>String(s||'').replace(/[&<>]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[m]));
-
-let state={invoices:[],productsDefault:4};
-
-// Sidebar
-document.getElementById('menuToggle').onclick=()=>document.getElementById('sidebar').classList.toggle('open');
-
-// Add product row
-const productsEl=el('#products');
-function makeRow(i){
-  const row=document.createElement('div');
-  row.className='prod-row';
-  row.innerHTML=`<div>${i}</div>
-  <input class="prod-desc" placeholder="Product description">
-  <input class="prod-qty" type="number" min="0" value="0">
-  <input class="prod-rate" type="number" min="0" step="0.01" value="0">
-  <input class="prod-disc" type="number" min="0" step="0.01" value="0">
-  <div class="amount">₹0.00</div>
-  <button class="remove">x</button>`;
-  row.querySelectorAll('input').forEach(inp=>inp.oninput=recalcTotals);
-  row.querySelector('.remove').onclick=()=>{row.remove();recalcTotals();};
-  return row;
-}
-function initProducts(n){productsEl.innerHTML='';for(let i=1;i<=n;i++)productsEl.append(makeRow(i));}
-el('#addProduct').onclick=()=>productsEl.append(makeRow(productsEl.children.length+1));
-el('#clearProducts').onclick=()=>{if(confirm('Clear all products?'))initProducts(state.productsDefault);};
-
-// Recalc totals
-function recalcTotals(){
-  let subtotal=0;
-  [...productsEl.children].forEach(r=>{
-    const q=+r.querySelector('.prod-qty').value;
-    const rt=+r.querySelector('.prod-rate').value;
-    const d=+r.querySelector('.prod-disc').value;
-    let amt=q*rt;
-    if(d)amt-=amt*(d/100);
-    r.querySelector('.amount').textContent=money(amt);
-    subtotal+=amt;
-  });
-  const taxPct=+el('#taxPercent').value;
-  const taxAmt=subtotal*(taxPct/100);
-  el('#subtotal').textContent=money(subtotal);
-  el('#taxAmount').textContent=money(taxAmt);
-  el('#total').textContent=money(subtotal+taxAmt);
-}
-el('#taxPercent').oninput=recalcTotals;
-el('#recalc').onclick=recalcTotals;
-
-// Collect invoice
-function collectInvoice(){
-  const rows=[...productsEl.children].map(r=>{
-    return{
-      desc:r.querySelector('.prod-desc').value,
-      qty:+r.querySelector('.prod-qty').value,
-      rate:+r.querySelector('.prod-rate').value,
-      disc:+r.querySelector('.prod-disc').value,
-      amount:parseFloat(r.querySelector('.amount').textContent.replace(/[₹,]/g,''))||0
-    };
-  });
-  const subtotal=rows.reduce((a,b)=>a+b.amount,0);
-  const taxPct=+el('#taxPercent').value;
-  const taxAmt=subtotal*(taxPct/100);
-  return{
-    id:el('#invoiceNo').value||'INV-'+Date.now(),
-    date:el('#invoiceDate').value||new Date().toISOString().slice(0,10),
-    customer:el('#customerName').value,
-    payment:el('#paymentMethod').value,
-    rows,subtotal,taxPct,taxAmt,total:subtotal+taxAmt
-  };
+  </body>
+  </html>
+  `;
+  return html;
 }
 
-// Save + Print
-el('#saveInvoice').onclick=()=>{
-  const inv=collectInvoice();
-  state.invoices.push(inv);
-  localStorage.setItem('invoices',JSON.stringify(state.invoices));
-  alert('Invoice saved');
-};
-el('#printInvoice').onclick=()=>{
-  const inv=collectInvoice();
-  const w=window.open();
-  w.document.write(`<!doctype html><html><head><meta charset='utf-8'><title>Invoice</title>
-  <style>body{font-family:Arial;padding:20px;}table{width:100%;border-collapse:collapse;}td,th{border:1px solid #ddd;padding:8px;}</style></head>
-  <body><h2>JBS KNIT WEAR</h2><div>Date: ${inv.date}</div>
-  <div>Invoice ID: ${inv.id}</div><div>Customer: ${escapeHtml(inv.customer||'')}</div>
-  <div>Payment: ${escapeHtml(inv.payment||'')}</div>
-  <table><tr><th>#</th><th>Product</th><th>Qty</th><th>Rate</th><th>Amount</th></tr>
-  ${inv.rows.map((r,i)=>`<tr><td>${i+1}</td><td>${escapeHtml(r.desc)}</td><td>${r.qty}</td><td>${fmt(r.rate)}</td><td>${fmt(r.amount)}</td></tr>`).join('')}
-  </table><h3>Total: ₹${fmt(inv.total)}</h3></body></html>`);
-  w.document.close();
-};
+/* ---------- Startup ---------- */
+function bootstrap(){
+  // set invoice date default to today
+  el('#invoiceDate').value = new Date().toISOString().slice(0,10);
+  // populate product rows template
+  initProductRows(APP_STATE.productsTemplateCount);
+  // restore saved invoices
+  APP_STATE.invoices = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  renderRecent();
+  renderInvoicesList();
 
-// Reset
-el('#resetData').onclick=()=>{if(confirm('Delete all invoices?')){localStorage.clear();state.invoices=[];alert('All data cleared');}}
-
-// Init
-function init(){
-  el('#invoiceDate').value=new Date().toISOString().slice(0,10);
-  initProducts(state.productsDefault);
-  const saved=localStorage.getItem('invoices');
-  if(saved)state.invoices=JSON.parse(saved);
+  // restore opening if present
+  const opening = localStorage.getItem('opening_today');
+  if(opening) el('#openingInput').value = opening;
 }
-init();
+bootstrap();
+
+/* ---------- small UI helpers ---------- */
+/* when window narrows and view is create, scroll create panel into view to avoid sidebar issues */
+window.addEventListener('resize', ()=> {
+  if(window.innerWidth < 980){
+    const active = document.querySelector('.nav button.active').dataset.view;
+    if(active === 'create') window.scrollTo({top:0,behavior:'smooth'});
+  }
+});
+
+/* quick keyboard support: Ctrl+I -> open Create Invoice */
+document.addEventListener('keydown', (e)=>{
+  if(e.ctrlKey && e.key.toLowerCase() === 'i'){ setActive('create'); }
+});
 </script>
+
 </body>
 </html>
