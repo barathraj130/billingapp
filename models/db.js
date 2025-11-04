@@ -1,28 +1,46 @@
-// SQLite connection and initialization
-const sqlite3 = require('sqlite3').verbose();
+// models/db.js (PostgreSQL)
+const { Pool } = require('pg');
 const fs = require('fs');
 const path = require('path');
 
-const DB_FILE = path.join(__dirname, '..', 'billing.db');
-const INIT_SQL_FILE = path.join(__dirname, '..', 'database', 'init.sql');
+// Render/standard practice uses DATABASE_URL
+const connectionString = process.env.DATABASE_URL;
 
-const db = new sqlite3.Database(DB_FILE, (err) => {
-  if (err) {
-    console.error('Failed to open DB', err);
-    process.exit(1);
-  } else {
-    console.log('Opened SQLite DB:', DB_FILE);
-    // initialize schema if init.sql exists
-    try {
-      const sql = fs.readFileSync(INIT_SQL_FILE, 'utf8');
-      db.exec(sql, (e) => {
-        if (e) console.error('Error running init.sql', e);
-        else console.log('Database schema ensured from init.sql');
-      });
-    } catch (e) {
-      console.warn('init.sql not found or error reading it:', e.message);
-    }
+if (!connectionString) {
+  console.error("FATAL: DATABASE_URL environment variable is not set. Cannot connect to PostgreSQL.");
+  // Note: For a Render setup, this check is vital.
+  // process.exit(1); 
+}
+
+const pool = new Pool({
+  connectionString: connectionString,
+  // Required for Render/external databases using SSL
+  ssl: {
+    rejectUnauthorized: false 
   }
 });
 
-module.exports = db;
+const INIT_SQL_FILE = path.join(__dirname, '..', 'database', 'init.sql');
+
+pool.on('connect', () => {
+  console.log('Connected to PostgreSQL database successfully.');
+});
+
+// Function to initialize the schema (Create tables)
+async function initializeSchema() {
+  try {
+    const sql = fs.readFileSync(INIT_SQL_FILE, 'utf8');
+    const client = await pool.connect();
+    // Execute the full initialization script (assumes it uses PG compatible DDL)
+    await client.query(sql); 
+    client.release();
+    console.log('Database schema ensured from init.sql (PostgreSQL).');
+  } catch (e) {
+    console.error('Error running init.sql (ensure it is PostgreSQL compatible):', e);
+  }
+}
+
+// Check connection and initialize schema immediately upon startup
+initializeSchema();
+
+module.exports = pool;

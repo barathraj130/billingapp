@@ -1,51 +1,83 @@
-const db = require('./db');
+const pool = require('./db');
 
 const Invoice = {
-  create: (invoice, items) => new Promise((resolve, reject) => {
-    const { invoice_no, customer_id = null, date, subtotal, tax, total, notes } = invoice;
-    const q = `INSERT INTO invoices (invoice_no, customer_id, date, subtotal, tax, total, notes)
-               VALUES (?,?,?,?,?,?,?)`;
-    db.run(q, [invoice_no, customer_id, date, subtotal, tax, total, notes], function (err) {
-      if (err) return reject(err);
-      const invoiceId = this.lastID;
-      if (!items || items.length === 0) return resolve({ id: invoiceId });
-
-      const stmt = db.prepare(`INSERT INTO invoice_items (invoice_id, description, qty, unit_price, line_total) VALUES (?,?,?,?,?)`);
-      for (const it of items) {
-        stmt.run(invoiceId, it.description, it.qty, it.unit_price, it.line_total);
+  create: async (invoice, items) => {
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      
+      const { invoice_no, customer_id = null, date, subtotal, tax, total, notes, customer_name = null } = invoice;
+      
+      // PostgreSQL returns the ID via RETURNING clause
+      const q = `INSERT INTO invoices (invoice_no, customer_id, date, subtotal, tax, total, notes, customer_name)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                 RETURNING id`;
+      
+      const result = await client.query(q, [invoice_no, customer_id, date, subtotal, tax, total, notes, customer_name]);
+      const invoiceId = result.rows[0].id;
+      
+      if (items && items.length > 0) {
+        const itemQueries = items.map(it => {
+          const itemQ = `INSERT INTO invoice_items (invoice_id, description, qty, unit_price, line_total) 
+                         VALUES ($1, $2, $3, $4, $5)`;
+          return client.query(itemQ, [invoiceId, it.description, it.qty, it.unit_price, it.line_total]);
+        });
+        await Promise.all(itemQueries);
       }
-      stmt.finalize((e) => {
-        if (e) return reject(e);
-        resolve({ id: invoiceId });
-      });
-    });
-  }),
 
-  getById: (id) => new Promise((resolve, reject) => {
-    db.get(`SELECT * FROM invoices WHERE id = ?`, [id], (err, invoice) => {
-      if (err) return reject(err);
-      if (!invoice) return resolve(null);
-      db.all(`SELECT * FROM invoice_items WHERE invoice_id = ?`, [id], (e, items) => {
-        if (e) return reject(e);
-        invoice.items = items;
-        resolve(invoice);
-      });
-    });
-  }),
+      await client.query('COMMIT');
+      return { id: invoiceId };
 
-  list: ({ from, to } = {}) => new Promise((resolve, reject) => {
-    let sql = `SELECT * FROM invoices`;
-    const params = [];
-    if (from && to) {
-      sql += ` WHERE date BETWEEN ? AND ?`;
-      params.push(from, to);
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
     }
-    sql += ` ORDER BY date DESC`;
-    db.all(sql, params, (err, rows) => {
-      if (err) return reject(err);
-      resolve(rows);
-    });
-  })
+  },
+
+  getById: async (id) => {
+    const client = await pool.connect();
+    try {
+      const invoiceResult = await client.query(`SELECT * FROM invoices WHERE id = $1`, [id]);
+      const invoice = invoiceResult.rows[0];
+      
+      if (!invoice) return null;
+      
+      const itemsResult = await client.query(`SELECT * FROM invoice_items WHERE invoice_id = $1`, [id]);
+      invoice.items = itemsResult.rows;
+      
+      return invoice;
+    } finally {
+      client.release();
+    }
+  },
+
+  list: async ({ from, to } = {}) => {
+    const client = await pool.connect();
+    try {
+      let sql = `SELECT * FROM invoices`;
+      const params = [];
+      let whereClauses = [];
+      let paramIndex = 1;
+
+      if (from && to) {
+        whereClauses.push(`date BETWEEN $${paramIndex++} AND $${paramIndex++}`);
+        params.push(from, to);
+      }
+      
+      if (whereClauses.length) {
+        sql += ` WHERE ` + whereClauses.join(' AND ');
+      }
+      
+      sql += ` ORDER BY id DESC`; 
+      
+      const result = await client.query(sql, params);
+      return result.rows;
+    } finally {
+      client.release();
+    }
+  }
 };
 
 module.exports = Invoice;

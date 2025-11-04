@@ -1,75 +1,141 @@
 /* style.css - simple modern + responsive layout */
 :root{
-    --bg:#f4f6f8;
-    --card:#ffffff;
-    --muted:#9aa4ad;
-    --accent:#0b72ff;
-    --danger:#ff6b57;
-  }
-  *{box-sizing:border-box;font-family:Inter, "Segoe UI", Roboto, Arial, sans-serif}
-  body{margin:0;background:var(--bg);color:#222}
-  .layout{display:flex;min-height:100vh}
+  --bg:#f4f6f8;
+  --card:#ffffff;
+  --muted:#9aa4ad;
+  --accent:#0b72ff;
+  --danger:#ff6b57;
+}
+*{box-sizing:border-box;font-family:Inter, "Segoe UI", Roboto, Arial, sans-serif}
+body{margin:0;background:var(--bg);color:#222}
+.layout{display:flex;min-height:100vh}
+.sidebar{
+  width:260px;padding:24px;background:linear-gradient(180deg,#fff,#fbfdff);
+  border-right:1px solid #eef2f5;box-shadow:0 2px 12px rgba(12,18,30,0.03);
+  /* For mobile menu transition */
+  transition: transform 0.25s ease-in-out; 
+}
+.brand .title{font-weight:700;font-size:18px}
+.brand .muted{font-weight:600;color:var(--muted)}
+.brand .subtitle{color:var(--muted);margin-top:6px;font-size:13px}
+.menu{margin-top:18px;display:flex;flex-direction:column;gap:6px}
+.menu-item{background:transparent;border:0;padding:12px 8px;text-align:left;border-radius:8px;color:#2b3b47;font-weight:600;cursor:pointer}
+.menu-item:hover{background:#f0f6ff}
+.sidebar-actions{margin-top:18px}
+.tip{color:var(--muted);margin-bottom:8px}
+.btn{background:var(--accent);border:0;color:#fff;padding:8px 14px;border-radius:8px;cursor:pointer; transition: background-color 0.15s;}
+.btn:hover:not(:disabled){filter: brightness(1.1);}
+.btn:disabled {background: #ccc; cursor: not-allowed;}
+.btn.small{padding:6px 8px;font-size:13px}
+.btn.danger{background:var(--danger)}
+
+/* Input styling consolidation */
+input[type="text"], input[type="number"], input[type="date"], select {
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  height: 38px; /* Standardize height */
+}
+
+/* main area */
+.main{flex:1;padding:20px}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:6px 8px; margin-bottom: 10px;}
+.hamburger{display:none; cursor: pointer;}
+.right{display:flex;gap:8px;align-items:center}
+.page-title{font-weight:700;color:#2b3b47}
+.content{margin-top:12px;padding:10px}
+
+/* card/grid */
+.cards{display:flex;gap:12px;margin-bottom:14px; flex-wrap: wrap;}
+.card{background:var(--card);padding:18px;border-radius:12px;box-shadow:0 10px 30px rgba(20,30,60,0.04);min-width:150px;flex: 1;}
+.card .label{color:var(--muted);font-size:14px}
+.big{font-weight:800;font-size:20px;margin-top:6px}
+
+/* panel, table */
+.panel{background:var(--card);padding:14px;border-radius:12px;box-shadow:0 8px 24px rgba(12,18,30,0.03);margin-bottom:14px}
+.panel-title{font-weight:800;margin-bottom:8px}
+.table{width:100%;border-collapse:collapse}
+.table th, .table td{padding:12px;border-bottom:1px solid #f0f2f4;text-align:left; font-size: 14px;}
+.muted{color:var(--muted)}
+
+/* Form Layout */
+.form-row{display:flex;gap:8px;align-items:center;margin:8px 0}
+.form-row label {white-space: nowrap; font-weight: 600;}
+
+/* invoice create product rows */
+#productsPanel { padding: 10px; background: #fdfdfd; }
+#productRows .product-row{
+  display:flex;gap:8px;align-items:center;padding:8px;
+  border-radius:6px;background:#fff;margin-bottom:8px;
+  border:1px solid #eef2f5;
+}
+/* Define column widths for product items */
+.product-row .p-name { flex: 4; min-width: 150px; }
+.product-row .p-qty { flex: 1; max-width: 70px; text-align: right; }
+.product-row .p-rate { flex: 1; max-width: 100px; text-align: right; }
+.product-row .p-disc { flex: 1; max-width: 80px; text-align: right; }
+.product-row .amt {
+    min-width: 90px;
+    text-align: right;
+    font-weight: 600;
+    flex: 1;
+}
+
+/* Totals box styling */
+.totals div {
+  display: flex;
+  justify-content: space-between;
+  padding: 3px 0;
+  min-width: 200px;
+}
+
+/* responsiveness */
+@media (max-width: 900px){
   .sidebar{
-    width:260px;padding:24px;background:linear-gradient(180deg,#fff,#fbfdff);
-    border-right:1px solid #eef2f5;box-shadow:0 2px 12px rgba(12,18,30,0.03);
+      position:fixed;left:-320px;top:0;bottom:0;z-index:40;
+      transform: translateX(0);
   }
-  .brand .title{font-weight:700;font-size:18px}
-  .brand .muted{font-weight:600;color:var(--muted)}
-  .brand .subtitle{color:var(--muted);margin-top:6px;font-size:13px}
-  .menu{margin-top:18px;display:flex;flex-direction:column;gap:6px}
-  .menu-item{background:transparent;border:0;padding:12px 8px;text-align:left;border-radius:8px;color:#2b3b47;font-weight:600}
-  .menu-item:hover{background:#f0f6ff}
-  .sidebar-actions{margin-top:18px}
-  .tip{color:var(--muted);margin-bottom:8px}
-  .btn{background:var(--accent);border:0;color:#fff;padding:8px 14px;border-radius:8px;cursor:pointer}
-  .btn.small{padding:6px 8px;font-size:13px}
-  .btn.danger{background:var(--danger)}
-  input[type="file"]{display:block;margin-top:8px}
-  
-  /* main area */
-  .main{flex:1;padding:20px}
-  .topbar{display:flex;align-items:center;justify-content:space-between;padding:6px 8px}
-  .hamburger{display:none}
-  .right{display:flex;gap:8px;align-items:center}
-  .page-title{font-weight:700;color:#2b3b47}
-  .content{margin-top:12px;padding:10px}
-  
-  /* card/grid */
-  .cards{display:flex;gap:12px;margin-bottom:14px}
-  .card{background:var(--card);padding:18px;border-radius:12px;box-shadow:0 10px 30px rgba(20,30,60,0.04);min-width:150px}
-  .card .label{color:var(--muted);font-size:14px}
-  .big{font-weight:800;font-size:20px;margin-top:6px}
-  
-  /* panel, table */
-  .panel{background:var(--card);padding:14px;border-radius:12px;box-shadow:0 8px 24px rgba(12,18,30,0.03);margin-bottom:14px}
-  .panel-title{font-weight:800;margin-bottom:8px}
-  .table{width:100%;border-collapse:collapse}
-  .table th, .table td{padding:12px;border-bottom:1px solid #f0f2f4;text-align:left}
-  .muted{color:var(--muted)}
-  .form-row{display:flex;gap:8px;align-items:center;margin:8px 0}
-  
-  /* invoice create product rows */
-  #productRows .product-row{display:flex;gap:8px;align-items:center;padding:10px;border-radius:8px;background:#fbfdff;margin-bottom:8px;border:1px solid #eef2f5}
-  .product-row input{padding:8px;border-radius:6px;border:1px solid #e6eef5}
-  
-  /* responsiveness */
-  @media (max-width: 900px){
-    .sidebar{position:fixed;left:-320px;top:0;bottom:0;z-index:40;transition:all .25s}
-    .sidebar.open{left:0}
-    .hamburger{display:block}
-    .main{padding:12px}
-    .page-title{font-size:15px}
-    .cards{flex-direction:column}
-    .topbar .right{flex-wrap:wrap}
-    .menu-item{padding:14px}
-    .brand .title{font-size:20px}
+  .sidebar.open{
+      transform: translateX(320px); /* Move back into view */
   }
+  .hamburger{display:block}
+  .main{padding:12px}
+  .page-title{font-size:15px}
+  .cards{flex-direction:column}
+  .topbar .right{flex-wrap:wrap; justify-content: flex-start;}
+  .menu-item{padding:14px}
+  .brand .title{font-size:20px}
   
-  /* mobile footer quick nav */
-  @media (max-width:600px){
-    .sidebar{width:100%;height:auto}
-    .menu{display:flex;flex-wrap:wrap}
-    .menu-item{background:var(--accent);color:white;margin:4px;padding:10px;border-radius:10px}
-    .topbar{flex-direction:column;align-items:flex-start;gap:8px}
+  /* Responsive Forms */
+  .form-row {
+      flex-wrap: wrap;
+      align-items: flex-start;
   }
-  
+  .form-row label {
+      width: 100%; /* Labels take full width */
+      margin-top: 5px;
+  }
+  .form-row input, .form-row select {
+      width: 100%; /* Inputs take full width */
+      min-width: unset;
+      flex-grow: 1;
+  }
+  .form-row > button {
+      width: 100%;
+      margin-top: 8px;
+  }
+
+  /* Product row stacking on small screens */
+  #productRows .product-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+  }
+  .product-row .p-name { grid-column: 1 / 3; } /* Name spans two columns */
+  .product-row .p-qty { grid-column: 1 / 2; }
+  .product-row .p-rate { grid-column: 2 / 3; }
+  .product-row .p-disc { grid-column: 1 / 2; }
+  .product-row .amt { grid-column: 2 / 3; }
+  .product-row .btn.danger { grid-column: 1 / 3; width: 100%; }
+}

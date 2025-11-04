@@ -34,17 +34,17 @@
         <div class="hamburger" id="hamb">☰</div>
         <div class="page-title" id="pageTitle">Billing — manage invoices & quick sales</div>
         <div class="right">
-          <input id="openingBalance" placeholder="Opening balance (today)" />
-          <button id="setOpening" class="btn small">Set</button>
-          <button id="clearOpening" class="btn small">Clear</button>
+          <!-- Opening Balance is UX placeholder, non-functional in current backend -->
+          <input id="openingBalance" placeholder="Opening balance (inactive)" disabled style="width: 120px;" />
           <button id="eodExport" class="btn small">EOD Export</button>
         </div>
       </header>
 
       <section id="content" class="content">
-        <!-- Dashboard -->
+        
+        <!-- Dashboard View -->
         <div class="view" id="view-dashboard">
-          <h1>Billing Dashboard <small class="muted">— manage invoices & quick sales</small></h1>
+          <h1>Billing Dashboard <small class="muted">— Financial Overview</small></h1>
           <div class="cards">
             <div class="card">
               <div class="label">Total Income</div>
@@ -55,7 +55,7 @@
               <div class="big" id="dash-expense">₹0.00</div>
             </div>
             <div class="card">
-              <div class="label">Cash Remaining</div>
+              <div class="label">Net Profit (Cash Flow)</div>
               <div class="big" id="dash-cash">₹0.00</div>
             </div>
           </div>
@@ -63,108 +63,104 @@
           <div class="panel transactions-panel">
             <div class="panel-title">Recent transactions</div>
             <table class="table" id="recentTransactions">
-              <thead><tr><th>Date</th><th>Type</th><th>Category</th><th>Pay</th><th>Amount</th></tr></thead>
-              <tbody><tr><td colspan="5" class="muted">No recent transactions</td></tr></tbody>
+              <thead><tr><th>Date</th><th>Type</th><th>Category</th><th>Reference</th><th>Amount</th></tr></thead>
+              <tbody><tr><td colspan="5" class="muted">Loading...</td></tr></tbody>
             </table>
           </div>
         </div>
 
-        <!-- Transactions -->
+        <!-- Transactions View -->
         <div class="view" id="view-transactions" style="display:none">
           <h1>Transactions <small class="muted">Quick add income & expense</small></h1>
           <div class="panel">
             <div class="form-row">
               <select id="txType"><option value="income">Income</option><option value="expense">Expense</option></select>
-              <input id="txCategory" placeholder="Category (e.g. sales)" />
-              <input id="txAmount" placeholder="Amount" type="number" />
+              <input id="txCategory" placeholder="Category (e.g. sales, rent, supplies)" />
+              <input id="txAmount" placeholder="Amount" type="number" step="0.01" />
               <input id="txDate" type="date" />
-              <select id="txPay"><option>Cash</option><option>GPay</option></select>
-              <button id="txAdd" class="btn">Add</button>
+              <button id="txAdd" class="btn">Add Transaction</button>
             </div>
 
-            <div class="form-row">
-              <input id="filterFrom" type="date" />
-              <input id="filterTo" type="date" />
-              <select id="filterType"><option value="">All</option><option value="income">Income</option><option value="expense">Expense</option></select>
-              <button id="txFilter" class="btn small">Filter</button>
+            <div class="form-row" style="margin-top: 15px;">
+              <input id="filterFrom" type="date" placeholder="From Date"/>
+              <input id="filterTo" type="date" placeholder="To Date"/>
+              <select id="filterType"><option value="">All Types</option><option value="income">Income</option><option value="expense">Expense</option></select>
+              <button id="txFilter" class="btn small">Apply Filter</button>
               <button id="txDownloadCSV" class="btn small">Download CSV</button>
             </div>
           </div>
 
           <div class="panel">
             <table class="table" id="txTable">
-              <thead><tr><th>Date</th><th>Type</th><th>Category</th><th>Pay</th><th>Amount</th><th>Actions</th></tr></thead>
-              <tbody><tr><td colspan="6" class="muted">No transactions added</td></tr></tbody>
+              <thead><tr><th>Date</th><th>Type</th><th>Category</th><th>Reference</th><th>Amount</th><th>Actions</th></tr></thead>
+              <tbody><tr><td colspan="6" class="muted">Loading transactions...</td></tr></tbody>
             </table>
+            <div class="small-muted"><em>Note: Transactions linked to invoices are automatically created. Manual deletion is disabled.</em></div>
           </div>
         </div>
 
-        <!-- Create Invoice -->
+        <!-- Create Invoice View -->
         <div class="view" id="view-create" style="display:none">
-          <h1>Create Invoice <small class="muted">manage invoices & quick sales</small></h1>
+          <h1>Create Invoice <small class="muted">Generate Sales Invoice</small></h1>
           <div class="panel">
             <div class="form-row">
-              <input id="invoiceId" placeholder="Invoice id (auto)" />
-              <input id="invoiceDate" type="date" />
-              <input id="invoiceCustomer" placeholder="Customer name" />
+              <label>Date:</label><input id="invoiceDate" type="date" required style="width: 150px;" />
+              <label>Customer:</label><input id="invoiceCustomer" placeholder="Customer name" style="flex: 2" />
+              <label>Payment:</label><select id="invoicePay" style="width: 150px"><option>Cash</option><option>GPay</option><option>Bank Transfer</option></select>
             </div>
-            <div class="form-row">
-              <label>Payment Method</label>
-              <select id="invoicePay"><option>Cash</option><option>GPay</option></select>
-            </div>
-
+            
             <div class="panel" id="productsPanel">
               <div id="productRows"></div>
-              <div class="form-row">
-                <button id="addProduct" class="btn">+ Add</button>
-                <button id="clearProducts" class="btn small">Clear</button>
-                <button id="recalc" class="btn small">Recalc</button>
+              <div class="form-row" style="justify-content: flex-end; align-items: center;">
+                <button id="addProduct" class="btn small">+ Add Product Row</button>
+                <button id="clearProducts" class="btn small danger">Clear All Rows</button>
+              </div>
+            </div>
+
+            <div class="form-row" style="justify-content: flex-end; align-items: flex-start; gap: 40px; border-top: 1px solid #eee; padding-top: 10px;">
+              <div style="text-align: right;">
+                <label>Tax %:</label>
+                <input id="taxPct" type="number" min="0" max="100" value="0" step="0.5" style="width: 80px;" />
+                <button id="recalc" class="btn small" style="margin-left: 10px;">Recalc</button>
+              </div>
+              <div class="totals" style="min-width: 200px; text-align: right;">
+                <div class="muted">Subtotal: <span id="subtotal">₹0.00</span></div>
+                <div style="font-weight: bold; font-size: 1.2em;">Total: <span id="totalAmount">₹0.00</span></div>
               </div>
             </div>
 
             <div class="form-row">
-              <label>Tax %</label>
-              <input id="taxPct" type="number" value="0" />
-              <div class="totals">
-                <div>Subtotal: <span id="subtotal">₹0.00</span></div>
-                <div>Total: <span id="totalAmount">₹0.00</span></div>
-              </div>
-            </div>
-
-            <div class="form-row">
-              <button id="saveInvoice" class="btn">Save</button>
-              <button id="printInvoice" class="btn small">Print</button>
-              <button id="resetInvoice" class="btn danger">Reset</button>
+              <button id="saveInvoice" class="btn">Save Invoice (and Open Print)</button>
+              <button id="resetInvoice" class="btn danger">Reset Form</button>
             </div>
           </div>
         </div>
 
-        <!-- Invoices list -->
+        <!-- Invoices list View -->
         <div class="view" id="view-invoices" style="display:none">
-          <h1>Invoices <small class="muted">manage invoices & quick sales</small></h1>
+          <h1>Invoices <small class="muted">List of saved invoices</small></h1>
           <div class="panel">
             <div class="form-row">
-              <input id="searchInvoice" placeholder="Search invoice / customer" />
-              <button id="exportAllCSV" class="btn small">Export CSV (all)</button>
-              <button id="exportCash" class="btn small">Export Cash</button>
-              <button id="exportGPay" class="btn small">Export GPay</button>
+              <input id="searchInvoice" placeholder="Search invoice no or customer name" style="flex: 1;" />
+              <button id="exportAllCSV" class="btn small">Export All Invoices CSV</button>
             </div>
 
             <table class="table" id="invoicesTable">
-              <thead><tr><th>Invoice</th><th>Date</th><th>Customer</th><th>Pay</th><th>Total</th><th>Actions</th></tr></thead>
-              <tbody><tr><td colspan="6" class="muted">No invoices</td></tr></tbody>
+              <thead><tr><th>Invoice No</th><th>Date</th><th>Customer</th><th>Pay (Est.)</th><th>Total</th><th>Actions</th></tr></thead>
+              <tbody><tr><td colspan="6" class="muted">Loading invoices...</td></tr></tbody>
             </table>
           </div>
         </div>
 
-        <!-- Printable -->
+        <!-- Printable View -->
         <div class="view" id="view-printable" style="display:none">
-          <h1>Printable template <small class="muted">View / print invoice</small></h1>
+          <h1>Printable Template Access <small class="muted">View / print existing invoice</small></h1>
           <div class="panel">
             <div class="form-row">
-              <select id="printSelect"></select>
-              <button id="openPrint" class="btn">Open</button>
+              <select id="printSelect" style="flex: 1;"></select>
+              <button id="openPrint" class="btn">Open Printable</button>
             </div>
+            <div class="small-muted">Select an invoice number/ID to view it in the official template.</div>
           </div>
         </div>
 
